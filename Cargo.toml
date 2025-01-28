@@ -4,10 +4,11 @@ version = "0.1.0"
 authors = ["Max Karou <maxkarou@protonmail.com>"]
 license = "MIT OR Apache-2.0"
 edition = "2021"
+readme = "README.md"
 rust-version = "1.56"
 repository = "https://github.com/52/c32"
 documentation = "https://docs.rs/c32"
-description = "Crockford Base32 encoding/decoding with 4-byte checksums."
+description = "Rust implementation of Crockford Base32 encoding with 4-byte checksums."
 categories = ["encoding", "value-formatting", "parsing"]
 keywords = ["base32", "crockford", "stacks-blockchain"]
 
