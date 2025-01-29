@@ -6,6 +6,8 @@
 //
 // Usage of this file is permitted solely under a sanctioned license.
 
+#![doc = include_str!("../README.md")]
+
 /// `C32` alphabet, used for encoding/decoding.
 pub(crate) const C32_ALPHABET: &[u8; 32] = b"0123456789ABCDEFGHJKMNPQRSTVWXYZ";
 
