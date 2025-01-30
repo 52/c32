@@ -6,7 +6,28 @@
 //
 // Usage of this file is permitted solely under a sanctioned license.
 
-#![doc = include_str!("../README.md")]
+//! # C32 - Crockford's Base32
+//!
+//! An implementation of the [Crockford Base32][1] encoding scheme.
+//!
+//! Encodes binary data to ASCII strings using crockford's 32-character
+//! alphabet.
+//!
+//! ## Usage
+//! ```
+//! use c32::decode;
+//! use c32::encode;
+//!
+//! let bytes = b"semper prorsum";
+//!
+//! let encoded = encode(bytes);
+//! let decoded = decode(encoded).unwrap();
+//!
+//! assert_eq!(encoded, "1SPAVBGCNS20W3JDXS76XBD");
+//! assert_eq!(&decoded, bytes);
+//! ```
+//!
+//! [1]: https://www.crockford.com/base32.html
 
 /// `C32` alphabet, used for encoding/decoding.
 pub(crate) const C32_ALPHABET: &[u8; 32] = b"0123456789ABCDEFGHJKMNPQRSTVWXYZ";
@@ -135,7 +156,7 @@ where
 ///
 /// Returns [`C32Error::InvalidChar`] if the string contains:
 /// - Non-ASCII characters
-/// - Characters not included in the [`C32_ALPHABET`](C32_ALPHABET)
+/// - Characters not included in the `C32_ALPHABET`
 ///
 /// Returns [`C32Error::TryFromInt`] if:
 /// - Remaining bits overflow a byte during decoding.
