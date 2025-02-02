@@ -1,10 +1,10 @@
 `c32`
 ===============
 
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)][License-Apache]
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)][License-MIT]
 
-Rust implementation of [Crockford's Base32](https://www.crockford.com/base32.html) encoding scheme.
+Rust implementation of [Crockford's Base32][Crockford] encoding scheme.
 
 ```rust
 use c32::encode;
@@ -25,3 +25,7 @@ Licensed under <a href="LICENSE-APACHE">Apache License, Version 2.0</a> or <a hr
 <br>
 Contributions to this crate will be dual-licensed under Apache-2.0 and MIT by default, unless specifically indicated otherwise.
 </sup>
+
+[License-Apache]: https://opensource.org/licenses/Apache-2.0
+[License-MIT]: https://opensource.org/licenses/MIT
+[Crockford]: https://www.crockford.com/base32.html

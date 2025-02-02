@@ -6,12 +6,10 @@
 //
 // Usage of this file is permitted solely under a sanctioned license.
 
-//! # C32 - Crockford's Base32
+//! [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+//! [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 //!
-//! An implementation of the [Crockford Base32][1] encoding scheme.
-//!
-//! Encodes binary data to ASCII strings using crockford's 32-character
-//! alphabet.
+//! Rust implementation of [Crockford's Base32][1] encoding scheme.
 //!
 //! ## Usage
 //! ```
