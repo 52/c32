@@ -1,0 +1,61 @@
+name: rust
+
+on:
+  push:
+    branches: ["master"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: rust-${{ github.head_ref || github.ref || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # force color output
+  CARGO_TERM_COLOR: always
+  # disable incremental compilation
+  CARGO_INCREMENTAL: 0
+  # more retries for network requests in cargo
+  CARGO_NET_RETRY: 10
+  # more retries for network requests in rustup
+  RUSTUP_MAX_RETRIES: 10
+  # short backtraces in CI logs
+  RUST_BACKTRACE: short
+  # deny rustdoc warnings
+  RUSTDOCFLAGS: -D warnings
+
+jobs:
+  clippy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@clippy
+      - uses: swatinem/rust-cache@v2
+      - run: cargo clippy
+
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rustfmt
+      - uses: swatinem/rust-cache@v2
+      - run: cargo fmt --all -- --check
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        version: [stable, nightly]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.version }}
+      - uses: swatinem/rust-cache@v2
+      - run: cargo check
+      - run: cargo test
