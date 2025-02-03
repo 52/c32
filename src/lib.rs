@@ -19,10 +19,10 @@
 //! let bytes = b"semper prorsum";
 //!
 //! let encoded = encode(bytes);
-//! let decoded = decode(encoded).unwrap();
+//! let decoded = decode(&encoded).unwrap();
 //!
 //! assert_eq!(encoded, "1SPAVBGCNS20W3JDXS76XBD");
-//! assert_eq!(&decoded, bytes);
+//! assert_eq!(decoded, bytes);
 //! ```
 //!
 //! [1]: https://www.crockford.com/base32.html
