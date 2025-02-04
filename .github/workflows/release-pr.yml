@@ -1,0 +1,24 @@
+name: release-pr
+
+on:
+  pull_request:
+    branches: ["master"]
+
+concurrency:
+  group: publish-${{ github.head_ref || github.ref || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  dry-run:
+    if: startsWith(github.head_ref, 'release/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: swatinem/rust-cache@v2
+      - run: cargo check --verbose
+      - run: cargo package --verbose
+      - run: cargo publish --dry-run --verbose
