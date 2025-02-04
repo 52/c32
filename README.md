@@ -18,11 +18,15 @@ assert_eq!(encoded, "1SPAVBGCNS20W3JDXS76XBD");
 assert_eq!(&decoded, data);
 ```
 
-#### License
+### License
 
 <sup>
 Licensed under <a href="LICENSE-APACHE">Apache License, Version 2.0</a> or <a href="LICENSE-MIT">MIT license</a> at your discretion.
+</sup>
+
 <br>
+
+<sup>
 Contributions to this crate will be dual-licensed under Apache-2.0 and MIT by default, unless specifically indicated otherwise.
 </sup>
 
