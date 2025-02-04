@@ -46,6 +46,14 @@ jobs:
       - uses: swatinem/rust-cache@v2
       - run: cargo fmt --all -- --check
 
+  doc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+      - uses: dtolnay/install@cargo-docs-rs
+      - run: cargo docs-rs
+
   test:
     runs-on: ubuntu-latest
     strategy:
