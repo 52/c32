@@ -1,7 +1,7 @@
 name: release
 
 on:
-  workflow_call:
+  workflow_dispatch:
     inputs:
       base:
         description: "Name of the branch to open PR against"
