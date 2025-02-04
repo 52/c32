@@ -9,6 +9,13 @@
 
 Rust implementation of [Crockford's Base32][Crockford] encoding scheme.
 
+```toml
+[dependencies]
+c32 = "0.2"
+```
+
+## Example
+
 ```rust
 use c32::encode;
 use c32::decode;
@@ -21,10 +28,16 @@ assert_eq!(encoded, "1SPAVBGCNS20W3JDXS76XBD");
 assert_eq!(&decoded, data);
 ```
 
-### License
+## Security
 
 <sup>
-Licensed under <a href="LICENSE-APACHE">Apache License, Version 2.0</a> or <a href="LICENSE-MIT">MIT license</a> at your discretion.
+For security-related concerns, please review the <a href="SECURITY.md">Security Policy</a>.
+</sup>
+
+## License
+
+<sup>
+Licensed under <a href="LICENSE-APACHE">Apache License, Version 2.0</a> or <a href="LICENSE-MIT">MIT License</a> at your discretion
 </sup>
 
 <br>
