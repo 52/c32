@@ -30,7 +30,7 @@ jobs:
       - id: set-version
         continue-on-error: true
         run: |
-          cargo set-version ${{ input.version }}
+          cargo set-version ${{ inputs.version }}
 
       - uses: peter-evans/create-pull-request@v7
         with:
