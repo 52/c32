@@ -11,6 +11,7 @@ documentation = "https://docs.rs/c32"
 description = "Rust implementation of Crockford's Base32 encoding"
 categories = ["encoding", "value-formatting", "parsing"]
 keywords = ["base32", "crockford", "stacks-blockchain"]
+exclude = [".github/", "benches/", "samples/"]
 
 [dependencies]
 thiserror = "2.0.11"
@@ -27,8 +28,10 @@ pedantic = "deny"
 
 [[bench]]
 name = "encode"
+path = "benches/encode.rs"
 harness = false
 
 [[bench]]
 name = "decode"
+path = "benches/decode.rs"
 harness = false
