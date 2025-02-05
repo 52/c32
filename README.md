@@ -61,7 +61,7 @@ For security-related concerns, please review the <a href="SECURITY.md">Security 
 ## License
 
 <sup>
-Licensed under <a href="LICENSE-APACHE">Apache License, Version 2.0</a> or <a href="LICENSE-MIT">MIT License</a> at your discretion
+Licensed under <a href="LICENSE-APACHE">Apache License, Version 2.0</a> or <a href="LICENSE-MIT">MIT License</a> at your discretion.
 </sup>
 
 ## Contribution
