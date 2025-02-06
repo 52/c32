@@ -11,7 +11,7 @@ use test_case::test_case;
 #[test_case(10_000, 10;   "encode rand small")]
 #[test_case(100, 1_000;   "encode rand large")]
 #[test_case(1_000, 100;   "encode rand mid")]
-fn test_c32_random(iter: usize, len: usize) {
+fn test_c32_rand(iter: usize, len: usize) {
     use rand::distr::Alphanumeric;
     use rand::distr::SampleString;
     use rand::Rng;
