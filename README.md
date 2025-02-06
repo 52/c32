@@ -14,18 +14,42 @@ Rust implementation of [Crockford's Base32][Crockford] encoding scheme.
 c32 = "0.2"
 ```
 
-## Example
+## Usage
+
+This crate provides two approaches for encoding/decoding:
 
 ```rust
-use c32::encode;
-use c32::decode;
+// with `alloc` ...
 
-let data = b"semper prorsum";
-let encoded = encode(data);
-let decoded = decode(&encoded).unwrap();
+#[cfg(feature = "alloc")]
+fn example_en_alloc() {
+    let bytes = b"usque ad finem";
+    let encoded = c32::encode(bytes);
+    assert_eq!(encoded, "1TQ6WBNCMG62S10CSMPWSBD");
+}
 
-assert_eq!(encoded, "1SPAVBGCNS20W3JDXS76XBD");
-assert_eq!(&decoded, data);
+#[cfg(feature = "alloc")]
+fn example_de_alloc() {
+    let encoded = "1TQ6WBNCMG62S10CSMPWSBD";
+    let decoded = c32::decode(encoded).unwrap();
+    assert_eq!(decoded, b"usque ad finem");
+}
+
+// or 'no_std' ...
+
+fn example_en_no_std() {
+    const bytes: &[u8; 14] = b"usque ad finem";
+    let mut buffer = [0; c32::encoded_len(bytes.len())];
+    let pos = c32::encode_into(bytes, &mut buffer).unwrap();
+    assert_eq!(&buffer[..pos], b"1TQ6WBNCMG62S10CSMPWSBD")
+}
+
+fn example_de_no_std() {
+    const bytes: &[u8; 23] = b"1TQ6WBNCMG62S10CSMPWSBD";
+    let mut buffer = [0; c32::decoded_len(bytes.len())];
+    let pos = c32::decode_into(bytes, &mut buffer).unwrap();
+    assert_eq!(&buffer[..pos], b"usque ad finem")
+}
 ```
 
 ## Security
@@ -40,10 +64,10 @@ For security-related concerns, please review the <a href="SECURITY.md">Security 
 Licensed under <a href="LICENSE-APACHE">Apache License, Version 2.0</a> or <a href="LICENSE-MIT">MIT License</a> at your discretion
 </sup>
 
-<br>
+## Contribution
 
 <sup>
-Contributions to this crate will be dual-licensed under Apache-2.0 and MIT by default, unless specifically indicated otherwise.
+Contributions to this crate will be dual-licensed under <a href="LICENSE-APACHE">Apache-2.0</a> and <a href="LICENSE-MIT">MIT</a> by default, unless specifically indicated otherwise.
 </sup>
 
 [Crates.io]: https://crates.io/crates/c32
