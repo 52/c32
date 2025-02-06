@@ -9,6 +9,6 @@
 #[path = "macro.rs"]
 mod macros;
 
-gen_c32_rand_test!(test_c32_rand_dist_lo, 10_000, 10);
-gen_c32_rand_test!(test_c32_rand_dist_mi, 1_000, 100);
-gen_c32_rand_test!(test_c32_rand_dist_hi, 100, 1_000);
+c32_rand_test!(test_c32_rand_lo, 10_000, 10);
+c32_rand_test!(test_c32_rand_mi, 1_000, 100);
+c32_rand_test!(test_c32_rand_hi, 100, 1_000);

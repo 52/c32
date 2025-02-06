@@ -9,74 +9,74 @@
 #[path = "macro.rs"]
 mod macros;
 
-gen_c32_error_test!(
+c32_error_test!(
     test_c32_error_invalid_char_exclamation,
     "!",
-    c32::C32Error::InvalidChar('!')
+    c32::Error::InvalidChar('!')
 );
 
-gen_c32_error_test!(
+c32_error_test!(
     test_c32_error_invalid_char_pound,
     "#",
-    c32::C32Error::InvalidChar('#')
+    c32::Error::InvalidChar('#')
 );
 
-gen_c32_error_test!(
+c32_error_test!(
     test_c32_error_invalid_char_dollar,
     "$",
-    c32::C32Error::InvalidChar('$')
+    c32::Error::InvalidChar('$')
 );
 
-gen_c32_error_test!(
+c32_error_test!(
     test_c32_error_invalid_char_percent,
     "%",
-    c32::C32Error::InvalidChar('%')
+    c32::Error::InvalidChar('%')
 );
 
-gen_c32_error_test!(
+c32_error_test!(
     test_c32_error_invalid_char_caret,
     "^",
-    c32::C32Error::InvalidChar('^')
+    c32::Error::InvalidChar('^')
 );
 
-gen_c32_error_test!(
+c32_error_test!(
     test_c32_error_invalid_char_ampersand,
     "&",
-    c32::C32Error::InvalidChar('&')
+    c32::Error::InvalidChar('&')
 );
 
-gen_c32_error_test!(
+c32_error_test!(
     test_c32_error_invalid_char_asterisk,
     "*",
-    c32::C32Error::InvalidChar('*')
+    c32::Error::InvalidChar('*')
 );
 
-gen_c32_error_test!(
+c32_error_test!(
     test_c32_error_non_ascii_japanese,
     "あ",
-    c32::C32Error::InvalidString
+    c32::Error::InvalidString
 );
 
-gen_c32_error_test!(
+c32_error_test!(
     test_c32_error_non_ascii_emoji,
     "😀",
-    c32::C32Error::InvalidString
+    c32::Error::InvalidString
 );
 
-gen_c32_error_test!(
+c32_error_test!(
     test_c32_error_non_ascii_chinese,
     "你",
-    c32::C32Error::InvalidString
+    c32::Error::InvalidString
 );
 
-gen_c32_error_test!(
+c32_error_test!(
     test_c32_error_mixed_invalid,
     "ABC!DEF",
-    c32::C32Error::InvalidChar('!')
+    c32::Error::InvalidChar('!')
 );
 
-gen_c32_error_test!(
+c32_error_test!(
     test_c32_error_mixed_non_ascii,
     "ABCあDEF",
-    c32::C32Error::InvalidString
+    c32::Error::InvalidString
 );
