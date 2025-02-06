@@ -1,28 +1,12 @@
+use std::format as f;
+use std::fs::read;
+
 use criterion::black_box;
 use criterion::criterion_group;
 use criterion::criterion_main;
-use criterion::BenchmarkId;
 use criterion::Criterion;
 
-macro_rules! gen_decode_benchmark {
-    ($($size:expr),*) => {
-        fn benchmark_decode(c: &mut Criterion) {
-            let mut group = c.benchmark_group("decode");
-            $(
-                let input = std::fs::read(concat!("samples/c32_", $size, ".in")).unwrap();
-                let encoded = black_box(c32::encode(&input));
-
-                group.bench_function(
-                    BenchmarkId::new("c32", $size),
-                    |b| b.iter(|| c32::decode(&encoded).unwrap())
-                );
-            )*
-            group.finish();
-        }
-    };
-}
-
-gen_decode_benchmark!(
+const BENCHMARK_SAMPLES: [&str; 16] = [
     "m_100x32b",
     "m_100x64b",
     "m_100x128b",
@@ -38,8 +22,22 @@ gen_decode_benchmark!(
     "s_512k",
     "s_1m",
     "s_2m",
-    "s_4m"
-);
+    "s_4m",
+];
+
+fn benchmark_decode(c: &mut Criterion) {
+    let mut group = c.benchmark_group("decode");
+
+    for sample in BENCHMARK_SAMPLES {
+        let benchmark_id = f!("c32_{sample}");
+        let input = read(f!("samples/{benchmark_id}.in")).unwrap();
+        let encoded = black_box(c32::encode(&input));
+
+        group.bench_function(benchmark_id, |b| {
+            b.iter(|| c32::decode(&encoded).unwrap())
+        });
+    }
+}
 
 criterion_group!(benches, benchmark_decode);
 criterion_main!(benches);
