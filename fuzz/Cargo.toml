@@ -1,0 +1,24 @@
+[package]
+name = "c32-fuzz"
+version = "0.0.0"
+authors = ["Max Karou <maxkarou@protonmail.com>"]
+license = "MIT OR Apache-2.0"
+edition = "2021"
+publish = false
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+
+[dependencies.c32]
+path = ".."
+
+[[bin]]
+name = "encode"
+path = "targets/encode.rs"
+
+[[bin]]
+name = "decode"
+path = "targets/decode.rs"

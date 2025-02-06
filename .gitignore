@@ -2,6 +2,11 @@
 debug/
 target/
 
+# fuzz
+corpus
+artifacts
+coverage
+
 # lock files
 Cargo.lock
 
