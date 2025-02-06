@@ -23,45 +23,46 @@
 //!
 //! This crate provides two approaches for encoding/decoding:
 //!
-//! ### Allocation API
-//!
 //! ```rust
-//! # #[cfg(feature = "alloc")] {
-//! let bytes = b"usque ad finem";
+//! // with `alloc` ...
 //!
-//! // encoding
-//! let encoded = c32::encode(bytes);
-//! assert_eq!(encoded, "1TQ6WBNCMG62S10CSMPWSBD");
+//! #[cfg(feature = "alloc")]
+//! fn encode() {
+//!     let bytes = b"usque ad finem";
+//!     let encoded = c32::encode(bytes);
+//!     assert_eq!(encoded, "1TQ6WBNCMG62S10CSMPWSBD");
+//! }
 //!
-//! // decoding
-//! let decoded = c32::decode(encoded).unwrap();
-//! assert_eq!(decoded, bytes);
-//! # }
-//! ```
+//! #[cfg(feature = "alloc")]
+//! fn decode() {
+//!     let encoded = "1TQ6WBNCMG62S10CSMPWSBD";
+//!     let decoded = c32::decode(encoded).unwrap();
+//!     assert_eq!(decoded, b"usque ad finem");
+//! }
 //!
-//! ### Non-Allocation API (`no_std`)
-//! ```rust
-//! let bytes = b"usque ad finem";
+//! // or 'no_std' ...
 //!
-//! // encoding
-//! let mut buffer = [0; 32];
-//! let pos = c32::encode_into(bytes, &mut buffer).unwrap();
-//! assert_eq!(&buffer[..pos], b"1TQ6WBNCMG62S10CSMPWSBD")
-//! ```
+//! fn encode_no_std() {
+//!     const bytes: &[u8; 14] = b"usque ad finem";
+//!     let mut buffer = [0; c32::encoded_len(bytes.len())];
+//!     let pos = c32::encode_into(bytes, &mut buffer).unwrap();
+//!     assert_eq!(&buffer[..pos], b"1TQ6WBNCMG62S10CSMPWSBD")
+//! }
 //!
-//! ```rust
-//! let bytes = b"1TQ6WBNCMG62S10CSMPWSBD";
-//!
-//! // decoding
-//! let mut buffer = [0; 32];
-//! let pos = c32::decode_into(bytes, &mut buffer).unwrap();
-//! assert_eq!(&buffer[..pos], b"usque ad finem")
+//! fn decode_no_std() {
+//!     const bytes: &[u8; 23] = b"1TQ6WBNCMG62S10CSMPWSBD";
+//!     let mut buffer = [0; c32::decoded_len(bytes.len())];
+//!     let pos = c32::decode_into(bytes, &mut buffer).unwrap();
+//!     assert_eq!(&buffer[..pos], b"usque ad finem")
+//! }
 //! ```
 //!
 //! # Features
 //!
-//! - `std` (default) - Enables standard library support.
-//! - `alloc` - Allows usage in `no_std` environments with heap allocation.
+//!  Feature | Description
+//! ---------|-------------------------------------------------------------
+//!  `std`   | Implement `std::error::Error` for [`Error`](Error)
+//!  `alloc` | Allocation-based API [`encode`](encode) & [`decode`](decode)
 //!
 //! [Crates.io]: https://crates.io/crates/c32
 //! [Docs.rs]: https://docs.rs/c32

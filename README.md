@@ -22,14 +22,14 @@ This crate provides two approaches for encoding/decoding:
 // with `alloc` ...
 
 #[cfg(feature = "alloc")]
-fn example_en_alloc() {
+fn encode() {
     let bytes = b"usque ad finem";
     let encoded = c32::encode(bytes);
     assert_eq!(encoded, "1TQ6WBNCMG62S10CSMPWSBD");
 }
 
 #[cfg(feature = "alloc")]
-fn example_de_alloc() {
+fn decode() {
     let encoded = "1TQ6WBNCMG62S10CSMPWSBD";
     let decoded = c32::decode(encoded).unwrap();
     assert_eq!(decoded, b"usque ad finem");
@@ -37,14 +37,14 @@ fn example_de_alloc() {
 
 // or 'no_std' ...
 
-fn example_en_no_std() {
+fn encode_no_std() {
     const bytes: &[u8; 14] = b"usque ad finem";
     let mut buffer = [0; c32::encoded_len(bytes.len())];
     let pos = c32::encode_into(bytes, &mut buffer).unwrap();
     assert_eq!(&buffer[..pos], b"1TQ6WBNCMG62S10CSMPWSBD")
 }
 
-fn example_de_no_std() {
+fn decode_no_std() {
     const bytes: &[u8; 23] = b"1TQ6WBNCMG62S10CSMPWSBD";
     let mut buffer = [0; c32::decoded_len(bytes.len())];
     let pos = c32::decode_into(bytes, &mut buffer).unwrap();
@@ -61,7 +61,7 @@ For security-related concerns, please review the <a href="SECURITY.md">Security 
 ## License
 
 <sup>
-Licensed under <a href="LICENSE-APACHE">Apache License, Version 2.0</a> or <a href="LICENSE-MIT">MIT License</a> at your discretion
+Licensed under <a href="LICENSE-APACHE">Apache License, Version 2.0</a> or <a href="LICENSE-MIT">MIT License</a> at your discretion.
 </sup>
 
 ## Contribution
