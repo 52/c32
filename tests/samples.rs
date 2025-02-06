@@ -6,23 +6,31 @@
 //
 // Usage of this file is permitted solely under a sanctioned license.
 
-#[path = "macro.rs"]
-mod macros;
+use test_case::test_case;
 
-c32_samples_test!(test_c32_m_32b, "samples/c32_m_100x32b.in");
-c32_samples_test!(test_c32_m_64b, "samples/c32_m_100x64b.in");
-c32_samples_test!(test_c32_m_128b, "samples/c32_m_100x128b.in");
-c32_samples_test!(test_c32_m_256b, "samples/c32_m_100x256b.in");
-c32_samples_test!(test_c32_m_512b, "samples/c32_m_100x512b.in");
-c32_samples_test!(test_c32_m_1k, "samples/c32_m_100x1k.in");
-c32_samples_test!(test_c32_m_2k, "samples/c32_m_100x2k.in");
-c32_samples_test!(test_c32_m_4k, "samples/c32_m_100x4k.in");
+#[test_case("samples/c32_m_100x32b.in";  "encode multi 32b")]
+#[test_case("samples/c32_m_100x64b.in";  "encode multi 64b")]
+#[test_case("samples/c32_m_100x128b.in"; "encode multi 128b")]
+#[test_case("samples/c32_m_100x256b.in"; "encode multi 256b")]
+#[test_case("samples/c32_m_100x512b.in"; "encode multi 512b")]
+#[test_case("samples/c32_m_100x1k.in";   "encode multi 1k")]
+#[test_case("samples/c32_m_100x2k.in";   "encode multi 2k")]
+#[test_case("samples/c32_m_100x4k.in";   "encode multi 4k")]
+#[test_case("samples/c32_s_32k.in";      "encode single 32k")]
+#[test_case("samples/c32_s_64k.in";      "encode single 64k")]
+#[test_case("samples/c32_s_128k.in";     "encode single 128k")]
+#[test_case("samples/c32_s_256k.in";     "encode single 256k")]
+#[test_case("samples/c32_s_512k.in";     "encode single 512k")]
+#[test_case("samples/c32_s_1m.in";       "encode single 1m")]
+#[test_case("samples/c32_s_2m.in";       "encode single 2m")]
+#[test_case("samples/c32_s_4m.in";       "encode single 4m")]
+fn test_c32_samples(path: &str) {
+    let input = std::fs::read(path).unwrap();
+    let mut ebuffer = vec![0; c32::encoded_len(input.len())];
+    let pos = c32::encode_into(&input, &mut ebuffer).unwrap();
 
-c32_samples_test!(test_c32_s_32k, "samples/c32_s_32k.in");
-c32_samples_test!(test_c32_s_64k, "samples/c32_s_64k.in");
-c32_samples_test!(test_c32_s_128k, "samples/c32_s_128k.in");
-c32_samples_test!(test_c32_s_256k, "samples/c32_s_256k.in");
-c32_samples_test!(test_c32_s_512k, "samples/c32_s_512k.in");
-c32_samples_test!(test_c32_s_1m, "samples/c32_s_1m.in");
-c32_samples_test!(test_c32_s_2m, "samples/c32_s_2m.in");
-c32_samples_test!(test_c32_s_4m, "samples/c32_s_4m.in");
+    let mut dbuffer = vec![0; c32::decoded_len(pos)];
+    let pos = c32::decode_into(&ebuffer[..pos], &mut dbuffer).unwrap();
+
+    assert_eq!(&dbuffer[..pos], &input);
+}

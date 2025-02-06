@@ -6,38 +6,41 @@
 //
 // Usage of this file is permitted solely under a sanctioned license.
 
-#[path = "macro.rs"]
-mod macros;
+use test_case::test_case;
 
-c32_unit_test!(test_c32_byte_min, vec![0], "0");
-c32_unit_test!(test_c32_byte_max, vec![255], "7Z");
-c32_unit_test!(test_c32_byte_mid, vec![127], "3Z");
-c32_unit_test!(test_c32_byte_quarter, vec![64], "20");
-c32_unit_test!(test_c32_byte_three_quarters, vec![192], "60");
+#[test_case(&[],                   "";        "empty")]
+#[test_case(&[0],                  "0";       "byte zero")]
+#[test_case(&[64],                 "20";      "byte quarter")]
+#[test_case(&[127],                "3Z";      "byte mid")]
+#[test_case(&[192],                "60";      "byte thirds")]
+#[test_case(&[255],                "7Z";      "byte max")]
+#[test_case(&[0, 0],               "00";      "pair zero")]
+#[test_case(&[1, 2],               "82";      "pair asc")]
+#[test_case(&[2, 1],               "G1";      "pair desc")]
+#[test_case(&[255, 255],           "1ZZZ";    "pair max")]
+#[test_case(&[42, 42],             "AHA";     "pair same")]
+#[test_case(&[0, 0, 0],            "000";     "triple zero")]
+#[test_case(&[1, 2, 3],            "20G3";    "triple asc")]
+#[test_case(&[3, 2, 1],            "60G1";    "triple desc")]
+#[test_case(&[255, 255, 255],      "FZZZZ";   "triple max")]
+#[test_case(&[42, 42, 42],         "2MAHA";   "triple same")]
+#[test_case(&[0, 0],               "00";      "zeros two")]
+#[test_case(&[0, 0, 0],            "000";     "zeros three")]
+#[test_case(&[0, 0, 0, 0],         "0000";    "zeros four")]
+#[test_case(&[0, 0, 0, 0, 0],      "00000";   "zeros five")]
+#[test_case(&[0, 0, 1],            "001";     "zeros cons")]
+#[test_case(&[1, 0, 1],            "2001";    "zero mid")]
+#[test_case(&[1, 0],               "80";      "zero trail")]
+#[test_case(&[0, 1],               "01";      "zero lead")]
+#[test_case(&[1, 0, 1, 0],         "G0080";   "zeros space")]
+#[test_case(&[1, 1, 1, 1],         "G2081";   "repeat low")]
+#[test_case(&[254, 254, 254, 254], "3ZFXZQY"; "repeat high")]
+fn test_c32_unit(bytes: &[u8], exp: &str) {
+    let mut encode_buf = [0; 32];
+    let written = c32::encode_into(bytes, &mut encode_buf).unwrap();
+    assert_eq!(&encode_buf[..written], exp.as_bytes());
 
-c32_unit_test!(test_c32_two_bytes_min, vec![0, 0], "00");
-c32_unit_test!(test_c32_two_bytes_max, vec![255, 255], "1ZZZ");
-c32_unit_test!(test_c32_two_bytes_ascending, vec![1, 2], "82");
-c32_unit_test!(test_c32_two_bytes_descending, vec![2, 1], "G1");
-c32_unit_test!(test_c32_two_bytes_same, vec![42, 42], "AHA");
-
-c32_unit_test!(test_c32_three_bytes_min, vec![0, 0, 0], "000");
-c32_unit_test!(test_c32_three_bytes_max, vec![255, 255, 255], "FZZZZ");
-c32_unit_test!(test_c32_three_bytes_ascending, vec![1, 2, 3], "20G3");
-c32_unit_test!(test_c32_three_bytes_descending, vec![3, 2, 1], "60G1");
-c32_unit_test!(test_c32_three_bytes_same, vec![42, 42, 42], "2MAHA");
-
-c32_unit_test!(test_c32_zero_length, vec![], "");
-c32_unit_test!(test_c32_zeros_one_byte, vec![0], "0");
-c32_unit_test!(test_c32_zeros_two_bytes, vec![0, 0], "00");
-c32_unit_test!(test_c32_zeros_three_bytes, vec![0, 0, 0], "000");
-c32_unit_test!(test_c32_zeros_four_bytes, vec![0, 0, 0, 0], "0000");
-c32_unit_test!(test_c32_zeros_five_bytes, vec![0, 0, 0, 0, 0], "00000");
-c32_unit_test!(test_c32_leading_zero, vec![0, 1], "01");
-c32_unit_test!(test_c32_trailing_zero, vec![1, 0], "80");
-c32_unit_test!(test_c32_middle_zero, vec![1, 0, 1], "2001");
-c32_unit_test!(test_c32_consecutive_zeros, vec![0, 0, 1], "001");
-c32_unit_test!(test_c32_spaced_zeros, vec![1, 0, 1, 0], "G0080");
-
-c32_unit_test!(test_c32_repeat_low, vec![1, 1, 1, 1], "G2081");
-c32_unit_test!(test_c32_repeat_high, vec![254, 254, 254, 254], "3ZFXZQY");
+    let mut buffer = [0; 32];
+    let pos = c32::decode_into(exp.as_bytes(), &mut buffer).unwrap();
+    assert_eq!(&buffer[..pos], bytes);
+}
