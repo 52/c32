@@ -1,20 +1,16 @@
 # Security Policy
 
-## Reporting a Vulnerability
+## Reporting Vulnerabilities
 
-If you discover a security vulnerability in this crate, please report it to: [maxkarou@protonmail.com](mailto:maxkarou@protonmail.com)
-
-The report should include:
-- Description of the vulnerability
-- Steps to reproduce
+If you discover a vulnerability in this crate, please email [maxkarou@protonmail.com](mailto:maxkarou@protonmail.com) with:
+- A detailed description of the vulnerability
+- Steps to reproduce it
 - Your contact information for follow-up
 
-Do not disclose the vulnerability publicly until we have had a chance to address it.
+**Do not disclose the vulnerability publicly until a fix is available.**
 
-## Vulnerability Disclosures
+## Disclosure Process
 
-- All security vulnerabilities will be promptly addressed
-- Security patches will be released as soon as possible
-- Users will be notified through release notes and security advisories
-
-For a list of previous security advisories, please visit the GitHub Security tab.
+- Vulnerabilities are addressed promptly.
+- Security patches and advisories are released as soon as possible.
+- Past advisories are available on the [GitHub Security tab](https://github.com/52/c32/security).
