@@ -7,16 +7,28 @@
 // Usage of this file is permitted solely under a sanctioned license.
 
 use c32::Error;
-use test_case::test_case;
 
-#[test_case("^",  Error::InvalidChar('^');     "invalid char caret")]
-#[test_case("#",  Error::InvalidChar('#');     "invalid char pound")]
-#[test_case("$",  Error::InvalidChar('$');     "invalid char dollar")]
-#[test_case("%",  Error::InvalidChar('%');     "invalid char percent")]
-#[test_case("*",  Error::InvalidChar('*');     "invalid char asterisk")]
-#[test_case("&",  Error::InvalidChar('&');     "invalid char ampersand")]
-#[test_case("!",  Error::InvalidChar('!');     "invalid char exclamation")]
-#[test_case("AB", Error::BufferTooSmall(1, 2); "invalid buffer capacity")]
-fn test_c32_decode_error(char: &str, err: Error) {
-    assert_eq!(c32::decode_into(char, &mut [0; 1]).unwrap_err(), err);
+#[path = "macro.rs"]
+mod macros;
+
+test_cases! {
+    test_c32_encode_err,
+    fn(bytes: impl AsRef<[u8]>, err: Error) {
+        let mut buffer = [0; 1];
+        let result = c32::encode_into(bytes.as_ref(), &mut buffer);
+        assert_eq!(result.unwrap_err(), err);
+    },
+    "invalid_buffer_capacity": ([1, 1], Error::InvalidBufferSize(1, 2)),
+}
+
+test_cases! {
+    test_c32_decode_err,
+    fn(str: &str, err: Error) {
+        let mut buffer = [0; 1];
+        let result = c32::decode_into(str, &mut buffer);
+        assert_eq!(result.unwrap_err(), err);
+    },
+    "invalid_buffer_capacity": ("AB", Error::InvalidBufferSize(1, 2)),
+    "invalid_string": ("🫡", Error::InvalidString),
+    "invalid_char": ("$", Error::InvalidChar('$')),
 }
