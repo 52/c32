@@ -14,43 +14,99 @@ Rust implementation of [Crockford's Base32][Crockford] encoding scheme.
 c32 = "0.3.0"
 ```
 
-## Usage
+## Implementation
 
-This crate provides two approaches for encoding/decoding:
+* **Lightweight** — The core functionality has zero external dependencies.
+* **Portable** — Fully compatible with `#![no_std]` environments.
+* **Safe** — Implemented entirely in safe Rust with no `unsafe` blocks.
+
+## Examples
+
+#### `std` or `alloc`
 
 ```rust
-// with `alloc` ...
-
-#[cfg(feature = "alloc")]
-fn encode() {
-    let bytes = b"usque ad finem";
-    let encoded = c32::encode(bytes);
-    assert_eq!(encoded, "1TQ6WBNCMG62S10CSMPWSBD");
-}
-
-#[cfg(feature = "alloc")]
-fn decode() {
-    let encoded = "1TQ6WBNCMG62S10CSMPWSBD";
-    let decoded = c32::decode(encoded).unwrap();
-    assert_eq!(decoded, b"usque ad finem");
-}
-
-// or 'no_std' ...
-
-fn encode_no_std() {
-    const bytes: &[u8; 14] = b"usque ad finem";
-    let mut buffer = [0; c32::encoded_len(bytes.len())];
-    let pos = c32::encode_into(bytes, &mut buffer).unwrap();
-    assert_eq!(&buffer[..pos], b"1TQ6WBNCMG62S10CSMPWSBD")
-}
-
-fn decode_no_std() {
-    const bytes: &[u8; 23] = b"1TQ6WBNCMG62S10CSMPWSBD";
-    let mut buffer = [0; c32::decoded_len(bytes.len())];
-    let pos = c32::decode_into(bytes, &mut buffer).unwrap();
-    assert_eq!(&buffer[..pos], b"usque ad finem")
-}
+// encoding...
+let bytes = b"usque ad finem";
+let encoded = c32::encode(&bytes);
+assert_eq!(encoded, "1TQ6WBNCMG62S10CSMPWSBD");
 ```
+
+```rust
+// decoding...
+let bytes = b"usque ad finem";
+let decoded = c32::decode("1TQ6WBNCMG62S10CSMPWSBD")?;
+assert_eq!(decoded, bytes);
+```
+
+#### `#![no_std]`
+
+```rust
+// encoding...
+let bytes = b"usque ad finem";
+let mut buffer = [0; 32];
+
+let written = c32::encode_into(bytes, &mut buffer)?;
+let encoded = &buffer[..written];
+assert_eq!(encoded, b"1TQ6WBNCMG62S10CSMPWSBD");
+```
+
+```rust
+// decoding...
+let encoded = b"1TQ6WBNCMG62S10CSMPWSBD";
+let mut buffer = [0; 32];
+
+let written = c32::decode_into(encoded, &mut buffer)?;
+let decoded = &buffer[..written];
+assert_eq!(decoded, b"usque ad finem");
+```
+
+## Checksums
+
+The `check` feature provides methods for encoding data with SHA256-based checksum verification.
+
+### Examples
+
+#### `std` or `alloc`
+
+```rust
+// encoding...
+let bytes = b"usque ad finem";
+let encoded = c32::encode_check(bytes, 22)?;
+assert_eq!(encoded, "P7AWVHENJJ0RB441K6JVK5DNJ7J3V5");
+```
+
+```rust
+// decoding...
+let encoded = "P7AWVHENJJ0RB441K6JVK5DNJ7J3V5";
+let (version, decoded) = c32::decode_check(encoded)?;
+assert_eq!(decoded, b"usque ad finem");
+assert_eq!(version, 22);
+```
+
+#### `#![no_std]`
+
+```rust
+// encoding...
+let bytes = b"usque ad finem";
+let mut buffer = [0; 32];
+
+let written = c32::encode_check_into(bytes, 22, &mut buffer)?;
+let encoded = &buffer[..written];
+assert_eq!(encoded, b"P7AWVHENJJ0RB441K6JVK5DNJ7J3V5");
+```
+
+```rust
+// decoding...
+let encoded = b"P7AWVHENJJ0RB441K6JVK5DNJ7J3V5";
+let mut buffer = [0; 32];
+
+let (version, written) = c32::decode_check_into(encoded, &mut buffer)?;
+let decoded = &buffer[..written];
+assert_eq!(decoded, b"usque ad finem");
+assert_eq!(version, 22);
+```
+
+For more details, please refer to the full [API Reference][Docs.rs].
 
 ## Security
 
