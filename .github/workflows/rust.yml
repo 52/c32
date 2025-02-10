@@ -67,7 +67,6 @@ jobs:
         with:
           toolchain: ${{ matrix.version }}
       - uses: swatinem/rust-cache@v2
-      - run: cargo check
-      - run: cargo test --features=std
-      - run: cargo test --features=alloc
-      - run: cargo test --no-default-features
+      - uses: RustCrypto/actions/cargo-hack-install@master
+      - run: cargo hack check --feature-powerset
+      - run: cargo hack test --feature-powerset
