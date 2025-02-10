@@ -60,11 +60,9 @@ let decoded = &buffer[..written];
 assert_eq!(decoded, b"usque ad finem");
 ```
 
-## Checksums
+## Checksum
 
 The `check` feature provides methods for encoding data with SHA256-based checksum verification.
-
-### Examples
 
 #### `std` or `alloc`
 
