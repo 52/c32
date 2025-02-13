@@ -1,42 +1,26 @@
-[package]
-name = "c32"
+[workspace]
+resolver = "2"
+members = ["c32", "benches", "fuzz", "tests"]
+
+[workspace.package]
 version = "0.4.0"
 authors = ["Max Karou <maxkarou@protonmail.com>"]
 license = "MIT OR Apache-2.0"
 edition = "2021"
-readme = "README.md"
 rust-version = "1.56"
 repository = "https://github.com/52/c32"
 documentation = "https://docs.rs/c32"
-description = "Rust implementation of Crockford's Base32 encoding"
-categories = ["encoding", "cryptography::cryptocurrencies", "no-std"]
-keywords = ["base32", "crockford", "encoding", "stacks-blockchain"]
-include = ["src/*", "README.md", "LICENSE-MIT", "LICENSE-APACHE"]
 
-[package.metadata.docs.rs]
-all-features = true
-rustdoc-args = ["--cfg", "docsrs"]
+[workspace.dependencies]
+# workspace
+c32 = { version = "0.4.0", path = "c32" }
 
-[features]
-default = ["std"]
-std = ["alloc"]
-alloc = []
-check = ["sha2"]
+# crypto
+sha2 = { package = "sha2-const-stable", version = "0.1.0" }
 
-[dependencies.sha2]
-version = "0.10.8"
-optional = true
-default-features = false
-
-[dev-dependencies]
+# misc
 criterion = "0.5.1"
-paste = "1.0.15"
-rand = "0.9.0"
+rand = "0.9.1"
 
-[[bench]]
-name = "encode"
-harness = false
-
-[[bench]]
-name = "decode"
-harness = false
+[workspace.metadata.cargo-all-features]
+skip_crates = ["fuzz"]
