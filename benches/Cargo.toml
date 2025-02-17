@@ -1,0 +1,28 @@
+[package]
+name = "benches"
+description = ""
+keywords = []
+categories = []
+homepage = ""
+publish = false
+
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+
+[dev-dependencies]
+c32 = { workspace = true }
+criterion = { workspace = true }
+
+[[bench]]
+name = "encode"
+path = "targets/encode.rs"
+harness = false
+
+[[bench]]
+name = "decode"
+path = "targets/decode.rs"
+harness = false
