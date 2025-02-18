@@ -1,24 +1,26 @@
 [package]
-name = "c32-fuzz"
-version = "0.0.0"
-authors = ["Max Karou <maxkarou@protonmail.com>"]
-license = "MIT OR Apache-2.0"
-edition = "2021"
+name = "fuzz"
+description = ""
+keywords = []
+categories = []
+homepage = ""
 publish = false
+
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+
+[dependencies]
+c32 = { workspace = true, features = ["alloc", "check"] }
+libfuzzer-sys = "0.4"
 
 [package.metadata]
 cargo-fuzz = true
 
-[dependencies]
-libfuzzer-sys = "0.4"
-
-[dependencies.c32]
-path = ".."
-
 [[bin]]
-name = "encode"
-path = "targets/encode.rs"
-
-[[bin]]
-name = "decode"
-path = "targets/decode.rs"
+name = "c32"
+path = "targets/c32.rs"
+test = false
