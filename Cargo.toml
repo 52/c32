@@ -3,7 +3,7 @@ resolver = "2"
 members = ["c32", "benches", "fuzz", "tests"]
 
 [workspace.package]
-version = "0.4.0"
+version = "0.5.0"
 authors = ["Max Karou <maxkarou@protonmail.com>"]
 license = "MIT OR Apache-2.0"
 edition = "2021"
@@ -13,7 +13,7 @@ documentation = "https://docs.rs/c32"
 
 [workspace.dependencies]
 # workspace
-c32 = { version = "0.4.0", path = "c32" }
+c32 = { version = "0.5.0", path = "c32" }
 
 # crypto
 sha2 = { package = "sha2-const-stable", version = "0.1.0" }
