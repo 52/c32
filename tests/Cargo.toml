@@ -1,5 +1,5 @@
 [package]
-name = "fuzz"
+name = "tests"
 description = ""
 keywords = []
 categories = []
@@ -13,14 +13,6 @@ license.workspace = true
 rust-version.workspace = true
 repository.workspace = true
 
-[dependencies]
+[dev-dependencies]
 c32 = { workspace = true, features = ["alloc", "check"] }
-libfuzzer-sys = "0.4"
-
-[package.metadata]
-cargo-fuzz = true
-
-[[bin]]
-name = "c32"
-path = "targets/c32.rs"
-test = false
+rand = { workspace = true }

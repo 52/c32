@@ -1,5 +1,5 @@
 [package]
-name = "fuzz"
+name = "benches"
 description = ""
 keywords = []
 categories = []
@@ -13,14 +13,16 @@ license.workspace = true
 rust-version.workspace = true
 repository.workspace = true
 
-[dependencies]
-c32 = { workspace = true, features = ["alloc", "check"] }
-libfuzzer-sys = "0.4"
+[dev-dependencies]
+c32 = { workspace = true }
+criterion = { workspace = true }
 
-[package.metadata]
-cargo-fuzz = true
+[[bench]]
+name = "encode"
+path = "targets/encode.rs"
+harness = false
 
-[[bin]]
-name = "c32"
-path = "targets/c32.rs"
-test = false
+[[bench]]
+name = "decode"
+path = "targets/decode.rs"
+harness = false

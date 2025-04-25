@@ -1,0 +1,25 @@
+[package]
+name = "c32"
+description = "Rust implementation of Crockford's Base32 encoding"
+categories = ["encoding", "cryptography::cryptocurrencies", "no-std"]
+keywords = ["base32", "crockford", "encoding", "stacks-blockchain"]
+
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+documentation.workspace = true
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+[features]
+default = ["alloc", "check"]
+alloc = []
+check = ["sha2"]
+
+[dependencies]
+sha2 = { workspace = true, optional = true }
