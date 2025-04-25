@@ -1378,6 +1378,7 @@ pub fn decode_check_into(src: &[u8], dst: &mut [u8]) -> Result<(usize, u8)> {
 }
 
 /// Private module containing internal methods.
+#[allow(dead_code)]
 mod __internal {
     use super::*;
 
