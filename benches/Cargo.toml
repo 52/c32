@@ -23,6 +23,16 @@ path = "targets/encode.rs"
 harness = false
 
 [[bench]]
+name = "encode_const"
+path = "targets/encode_const.rs"
+harness = false
+
+[[bench]]
 name = "decode"
 path = "targets/decode.rs"
+harness = false
+
+[[bench]]
+name = "decode_const"
+path = "targets/decode_const.rs"
 harness = false
