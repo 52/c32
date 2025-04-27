@@ -6,6 +6,8 @@
 //
 // Usage of this file is permitted solely under a sanctioned license.
 
+#![allow(dead_code)]
+
 /// A type alias for static byte arrays.
 pub type Bytes<const N: usize> = &'static [u8; N];
 
