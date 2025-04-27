@@ -6,38 +6,19 @@
 //
 // Usage of this file is permitted solely under a sanctioned license.
 
-use std::fs::read;
-
+use criterion::black_box;
 use criterion::criterion_group;
 use criterion::criterion_main;
 use criterion::Criterion;
 use format as f;
 
-const SAMPLES: [&str; 16] = [
-    "m_100x32b",
-    "m_100x64b",
-    "m_100x128b",
-    "m_100x256b",
-    "m_100x512b",
-    "m_100x1k",
-    "m_100x2k",
-    "m_100x4k",
-    "s_32k",
-    "s_64k",
-    "s_128k",
-    "s_256k",
-    "s_512k",
-    "s_1m",
-    "s_2m",
-    "s_4m",
-];
+mod samples;
 
 /// A benchmark for default decoding functions.
 fn bench_decode(c: &mut Criterion) {
     let mut group = c.benchmark_group("decode");
 
-    for sample in SAMPLES {
-        let bytes = read(f!("../samples/c32_{sample}.in")).unwrap();
+    for (sample, bytes) in samples::ALL {
         let en = c32::encode(bytes);
         let en_bytes = en.as_bytes();
 
@@ -45,12 +26,12 @@ fn bench_decode(c: &mut Criterion) {
         group.bench_function(f!("decode_into_{sample}"), |b| {
             let capacity = c32::decoded_len(en_bytes.len());
             let mut dst = vec![0u8; capacity];
-            b.iter(|| c32::decode_into(en_bytes, &mut dst).unwrap());
+            b.iter(|| c32::decode_into(black_box(en_bytes), &mut dst).unwrap());
         });
 
         // [`c32::decode`]
         group.bench_function(f!("decode_{sample}"), |b| {
-            b.iter(|| c32::decode(&en).unwrap());
+            b.iter(|| c32::decode(black_box(&en)).unwrap());
         });
     }
 
@@ -61,8 +42,7 @@ fn bench_decode(c: &mut Criterion) {
 fn bench_decode_check(c: &mut Criterion) {
     let mut group = c.benchmark_group("decode_check");
 
-    for sample in SAMPLES {
-        let bytes = read(f!("../samples/c32_{sample}.in")).unwrap();
+    for (sample, bytes) in samples::ALL {
         let en = c32::encode_check(bytes, 0).unwrap();
         let en_bytes = en.as_bytes();
 
@@ -70,12 +50,12 @@ fn bench_decode_check(c: &mut Criterion) {
         group.bench_function(f!("decode_check_into_{sample}"), |b| {
             let capacity = c32::decoded_check_len(en_bytes.len());
             let mut dst = vec![0u8; capacity];
-            b.iter(|| c32::decode_check_into(en_bytes, &mut dst).unwrap());
+            b.iter(|| c32::decode_check_into(black_box(en_bytes), &mut dst).unwrap());
         });
 
         // [`c32::decode_check`]
         group.bench_function(f!("decode_check_{sample}"), |b| {
-            b.iter(|| c32::decode_check(&en).unwrap());
+            b.iter(|| c32::decode_check(black_box(&en)).unwrap());
         });
     }
 
@@ -86,13 +66,12 @@ fn bench_decode_check(c: &mut Criterion) {
 fn bench_decode_prefixed(c: &mut Criterion) {
     let mut group = c.benchmark_group("decode_prefixed");
 
-    for sample in SAMPLES {
-        let bytes = read(f!("../samples/c32_{sample}.in")).unwrap();
+    for (sample, bytes) in samples::ALL {
         let en = c32::encode_prefixed(bytes, 'S');
 
         // [`c32::decode_prefixed`]
         group.bench_function(f!("decode_prefixed_{sample}"), |b| {
-            b.iter(|| c32::decode_prefixed(&en, 'S').unwrap());
+            b.iter(|| c32::decode_prefixed(black_box(&en), 'S').unwrap());
         });
     }
 
@@ -103,13 +82,12 @@ fn bench_decode_prefixed(c: &mut Criterion) {
 fn bench_decode_check_prefixed(c: &mut Criterion) {
     let mut group = c.benchmark_group("decode_check_prefixed");
 
-    for sample in SAMPLES {
-        let bytes = read(f!("../samples/c32_{sample}.in")).unwrap();
+    for (sample, bytes) in samples::ALL {
         let en = c32::encode_check_prefixed(bytes, 'S', 0).unwrap();
 
         // [`c32::decode_check_prefixed`]
         group.bench_function(f!("decode_check_prefixed_{sample}"), |b| {
-            b.iter(|| c32::decode_check_prefixed(&en, 'S').unwrap());
+            b.iter(|| c32::decode_check_prefixed(black_box(&en), 'S').unwrap());
         });
     }
 
