@@ -58,7 +58,7 @@ mod __internal {
             let result = $fn;
             assert!(matches!(
                 result,
-                Err(Error::InvalidVersion { version }) if version == $version
+                Err(Error::InvalidVersion { expected: _, version }) if version == $version
             ));
         };
     }

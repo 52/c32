@@ -262,8 +262,10 @@ pub enum Error {
         got: Option<char>,
     },
     #[cfg(feature = "check")]
-    /// The version must be less or equal to 32.
+    /// The provided version byte is invalid.
     InvalidVersion {
+        /// A description of the expected version constraints.
+        expected: &'static str,
         /// The invalid version byte.
         version: u8,
     },
@@ -292,14 +294,14 @@ impl fmt::Display for Error {
                 write!(f, "Buffer size '{len}' is less than required '{min}'")
             }
             Self::InvalidCharacter { char, index } => {
-                write!(f, "Invalid character '{char}' at position '{index}'")
+                write!(f, "Invalid character '{char}' at position {index}")
             }
             Self::MissingPrefix { char, got } => {
                 write!(f, "Expected prefix '{char}', found '{got:?}'")
             }
             #[cfg(feature = "check")]
-            Self::InvalidVersion { version } => {
-                write!(f, "Version must be <= 32, got {version}")
+            Self::InvalidVersion { expected, version } => {
+                write!(f, "Invalid version byte '{version}': {expected}")
             }
             #[cfg(feature = "check")]
             Self::InsufficientData { min, len } => {
@@ -1304,7 +1306,10 @@ pub fn encode_check_into(src: &[u8], dst: &mut [u8], ver: u8) -> Result<usize> {
 
     // Assert that the version is valid (>= 32).
     if ver >= 32 {
-        return Err(Error::InvalidVersion { version: ver });
+        return Err(Error::InvalidVersion {
+            expected: "must be >= 32",
+            version: ver,
+        });
     }
 
     // Insert the version character into the output buffer.
@@ -1378,7 +1383,10 @@ pub fn decode_check_into(src: &[u8], dst: &mut [u8]) -> Result<(usize, u8)> {
 
     // Assert that the recovered version is valid. (>= 32).
     if version >= 32 {
-        return Err(Error::InvalidVersion { version });
+        return Err(Error::InvalidVersion {
+            expected: "must be >= 32",
+            version,
+        });
     }
 
     // Decode the remaining bytes into the output buffer.
