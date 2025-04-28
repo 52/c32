@@ -1264,7 +1264,7 @@ pub fn decode_into(src: &[u8], dst: &mut [u8]) -> Result<usize> {
     }
 
     // Encode the input bytes, and return the amount of bytes written.
-    Ok(__internal::de(src, 0, src.len(), dst, 0)?)
+    __internal::de(src, 0, src.len(), dst, 0)
 }
 
 /// Encodes bytes as Crockford Base32Check into a provided buffer.
@@ -1418,6 +1418,7 @@ mod __internal {
     /// # Notes
     ///
     /// The caller must ensure, that the output buffer is sufficiently sized.
+    #[inline]
     #[must_use]
     pub(crate) const fn en(
         src: &[u8],
@@ -1524,7 +1525,7 @@ mod __internal {
     /// # Notes
     ///
     /// The caller must ensure, that the output buffer is sufficiently sized.
-    #[must_use]
+    #[inline]
     #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
     pub(crate) const fn de(
         src: &[u8],
