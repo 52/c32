@@ -422,7 +422,13 @@ impl<const N: usize> Buffer<N> {
         let mut dst = [0u8; N];
 
         // Decode the input to the buffer.
-        let dst_pos = __internal::de(src, 0, src.len(), &mut dst, 0);
+        let dst_pos = match __internal::de(src, 0, src.len(), &mut dst, 0) {
+            Ok(pos) => pos,
+            Err(Error::InvalidCharacter { char: _, index: _ }) => {
+                panic!("Input contains invalid characters")
+            }
+            _ => unreachable!(),
+        };
 
         Buffer { dst, dst_pos }
     }
@@ -493,7 +499,13 @@ impl<const N: usize> Buffer<N> {
         let mut dst = [0u8; N];
 
         // Decode the input (without prefix) to the buffer.
-        let dst_pos = __internal::de(src, 1, src.len() - 1, &mut dst, 0);
+        let dst_pos = match __internal::de(src, 1, src.len() - 1, &mut dst, 0) {
+            Ok(pos) => pos,
+            Err(Error::InvalidCharacter { char: _, index: _ }) => {
+                panic!("Input contains invalid characters")
+            }
+            _ => unreachable!(),
+        };
 
         Buffer { dst, dst_pos }
     }
@@ -570,12 +582,27 @@ impl<const N: usize> Buffer<N> {
 
         // Extract the version byte.
         let mut buffer = [0u8; 1];
-        let _ = __internal::de(&[src[0]], 0, 1, &mut buffer, 0);
+        let _ = match __internal::de(&[src[0]], 0, 1, &mut buffer, 0) {
+            Ok(pos) => pos,
+            Err(Error::InvalidCharacter { char: _, index: _ }) => {
+                panic!("Input contains invalid characters")
+            }
+            _ => unreachable!(),
+        };
+
+        // Assert that the version is < 32.
         let version = buffer[0];
         assert!(version < 32, "Version must be < 32");
 
         // Decode the payload.
-        let offset = __internal::de(src, 1, src.len() - 1, &mut dst, 0);
+        let offset = match __internal::de(src, 1, src.len() - 1, &mut dst, 0) {
+            Ok(pos) => pos,
+            Err(Error::InvalidCharacter { char: _, index: _ }) => {
+                panic!("Input contains invalid characters")
+            }
+            _ => unreachable!(),
+        };
+
         let dst_pos = offset - checksum::BYTE_LENGTH;
 
         // Extract the checksum.
@@ -674,7 +701,15 @@ impl<const N: usize> Buffer<N> {
 
         // Extract the version byte.
         let mut buffer = [0u8; 1];
-        let _ = __internal::de(&[src[1]], 0, 1, &mut buffer, 0);
+        let _ = match __internal::de(&[src[1]], 0, 1, &mut buffer, 0) {
+            Ok(pos) => pos,
+            Err(Error::InvalidCharacter { char: _, index: _ }) => {
+                panic!("Input contains invalid characters")
+            }
+            _ => unreachable!(),
+        };
+
+        // Assert that the version is < 32.
         let version = buffer[0];
         assert!(version < 32, "Version must be < 32");
 
@@ -682,7 +717,14 @@ impl<const N: usize> Buffer<N> {
         let mut dst = [0u8; N];
 
         // Decode the payload.
-        let offset = __internal::de(src, 2, src.len() - 2, &mut dst, 0);
+        let offset = match __internal::de(src, 2, src.len() - 2, &mut dst, 0) {
+            Ok(pos) => pos,
+            Err(Error::InvalidCharacter { char: _, index: _ }) => {
+                panic!("Input contains invalid characters")
+            }
+            _ => unreachable!(),
+        };
+
         let dst_pos = offset - checksum::BYTE_LENGTH;
 
         // Extract the checksum.
@@ -1221,18 +1263,8 @@ pub fn decode_into(src: &[u8], dst: &mut [u8]) -> Result<usize> {
         });
     }
 
-    // Assert that each input character is valid Crockford Base32.
-    for (i, byte) in src.iter().enumerate() {
-        if *byte >= 128 || BYTE_MAP[*byte as usize] < 0 {
-            return Err(Error::InvalidCharacter {
-                char: *byte as char,
-                index: i,
-            });
-        }
-    }
-
     // Encode the input bytes, and return the amount of bytes written.
-    Ok(__internal::de(src, 0, src.len(), dst, 0))
+    __internal::de(src, 0, src.len(), dst, 0)
 }
 
 /// Encodes bytes as Crockford Base32Check into a provided buffer.
@@ -1336,22 +1368,12 @@ pub fn decode_check_into(src: &[u8], dst: &mut [u8]) -> Result<(usize, u8)> {
         });
     }
 
-    // Assert that each input character is valid Crockford Base32.
-    for (i, byte) in src.iter().enumerate() {
-        if *byte >= 128 || BYTE_MAP[*byte as usize] < 0 {
-            return Err(Error::InvalidCharacter {
-                char: *byte as char,
-                index: i,
-            });
-        }
-    }
-
     // This should not panic, as the check above ensures enough bytes.
     let (tag, payload) = src.split_first().unwrap();
 
     // Decode the version byte.
     let mut buffer = [0u8; 1];
-    let _ = __internal::de(&[*tag], 0, 1, &mut buffer, 0);
+    let _ = __internal::de(&[*tag], 0, 1, &mut buffer, 0)?;
     let version = buffer[0];
 
     // Assert that the recovered version is valid. (>= 32).
@@ -1360,7 +1382,16 @@ pub fn decode_check_into(src: &[u8], dst: &mut [u8]) -> Result<(usize, u8)> {
     }
 
     // Decode the remaining bytes into the output buffer.
-    let mut offset = __internal::de(payload, 0, payload.len(), dst, 0);
+    let mut offset = match __internal::de(payload, 0, payload.len(), dst, 0) {
+        Ok(pos) => pos,
+        Err(Error::InvalidCharacter { char, index }) => {
+            return Err(Error::InvalidCharacter {
+                char,
+                index: index + 1,
+            });
+        }
+        Err(e) => return Err(e),
+    };
 
     // Extract the checksum.
     offset -= checksum::BYTE_LENGTH;
@@ -1386,7 +1417,8 @@ mod __internal {
     ///
     /// # Notes
     ///
-    /// - The output buffer must be sufficiently sized.
+    /// The caller must ensure, that the output buffer is sufficiently sized.
+    #[inline]
     #[must_use]
     pub(crate) const fn en(
         src: &[u8],
@@ -1492,10 +1524,8 @@ mod __internal {
     ///
     /// # Notes
     ///
-    /// - The output buffer must be sufficiently sized.
-    /// - The input must only contains bytes within ASCII range.
-    /// - The input must only contains valid Crockford Base32 characters.
-    #[must_use]
+    /// The caller must ensure, that the output buffer is sufficiently sized.
+    #[inline]
     #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
     pub(crate) const fn de(
         src: &[u8],
@@ -1503,7 +1533,7 @@ mod __internal {
         src_len: usize,
         dst: &mut [u8],
         dst_offset: usize,
-    ) -> usize {
+    ) -> Result<usize> {
         const MASK_8: u16 = 0xFF;
         const SHIFT_8: u16 = 8;
 
@@ -1524,11 +1554,21 @@ mod __internal {
 
             // fetch the byte
             let byte = src[input_pos];
-            assert!(byte < 128, "Byte out of ASCII range");
+            if byte >= 128 {
+                return Err(Error::InvalidCharacter {
+                    char: byte as char,
+                    index: input_pos - src_offset,
+                });
+            }
 
             // convert the byte to a map index
             let index = BYTE_MAP[byte as usize];
-            assert!(index >= 0, "Index out of Crockford Base32 range");
+            if index < 0 {
+                return Err(Error::InvalidCharacter {
+                    char: byte as char,
+                    index: input_pos - src_offset,
+                });
+            }
 
             // accumulate bits into carry
             carry |= (index as u16) << carry_bits;
@@ -1578,7 +1618,7 @@ mod __internal {
             }
         }
 
-        dst_pos - dst_offset
+        Ok(dst_pos - dst_offset)
     }
 
     /// Copies `n` bytes from `src` to `dst`.
