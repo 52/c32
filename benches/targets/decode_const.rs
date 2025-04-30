@@ -1,4 +1,3 @@
-// © 2025 Max Karou. All Rights Reserved.
 // Licensed under Apache Version 2.0, or MIT License, at your discretion.
 //
 // Apache License: http://www.apache.org/licenses/LICENSE-2.0
@@ -6,6 +5,8 @@
 //
 // Usage of this file is permitted solely under a sanctioned license.
 
+use c32::en::Check;
+use c32::Buffer;
 use criterion::black_box;
 use criterion::criterion_group;
 use criterion::criterion_main;
@@ -23,7 +24,7 @@ fn bench_decode(c: &mut Criterion) {
             let en = c32::encode(*$sample);
             let en_bytes = en.as_bytes();
             group.bench_function(f!("decode_const_{}", $name), |b| {
-                b.iter(|| c32::Buffer::<$n>::decode(black_box(en_bytes)));
+                b.iter(|| Buffer::<$n>::decode(black_box(en_bytes)));
             });
         };
     }
@@ -46,7 +47,9 @@ fn bench_decode_check(c: &mut Criterion) {
             let en = c32::encode_check(*$sample, 0).unwrap();
             let en_bytes = en.as_bytes();
             group.bench_function(f!("decode_check_const_{}", $name), |b| {
-                b.iter(|| c32::Buffer::<$n>::decode_check(black_box(en_bytes)));
+                b.iter(|| {
+                    Buffer::<$n, false, Check>::decode(black_box(en_bytes))
+                });
             });
         };
     }
@@ -69,7 +72,7 @@ fn bench_decode_prefixed(c: &mut Criterion) {
             let en = c32::encode_prefixed(*$sample, 'S');
             let en_bytes = en.as_bytes();
             group.bench_function(f!("decode_prefixed_const_{}", $name), |b| {
-                b.iter(|| c32::Buffer::<$n>::decode_prefixed(black_box(en_bytes), 'S'));
+                b.iter(|| Buffer::<$n, true>::decode(black_box(en_bytes), 'S'));
             });
         };
     }
@@ -91,9 +94,17 @@ fn bench_decode_check_prefixed(c: &mut Criterion) {
         ($name:expr, $n:expr, $sample:expr) => {
             let en = c32::encode_check_prefixed(*$sample, 'S', 0).unwrap();
             let en_bytes = en.as_bytes();
-            group.bench_function(f!("decode_check_prefixed_const_{}", $name), |b| {
-                b.iter(|| c32::Buffer::<$n>::decode_check_prefixed(black_box(en_bytes), 'S'));
-            });
+            group.bench_function(
+                f!("decode_check_prefixed_const_{}", $name),
+                |b| {
+                    b.iter(|| {
+                        Buffer::<$n, true, Check>::decode(
+                            black_box(en_bytes),
+                            'S',
+                        )
+                    });
+                },
+            );
         };
     }
 
