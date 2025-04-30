@@ -233,12 +233,12 @@ pub enum Error {
     /// * `min` - The minimum required buffer size.
     /// * `len` - The actual size of the provided buffer.
     BufferTooSmall { min: usize, len: usize },
-    /// <todo>
+    /// The input data size doesn't match the expected size.
     ///
     /// # Fields
     ///
-    /// * <todo>
-    /// * <todo>
+    /// * `expected` - The expected data size in bytes.
+    /// * `got` - The actual size of the provided data.
     InvalidDataSize { expected: usize, got: usize },
     /// An invalid character was encountered during decoding.
     ///
