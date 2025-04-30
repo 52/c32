@@ -233,6 +233,13 @@ pub enum Error {
     /// * `min` - The minimum required buffer size.
     /// * `len` - The actual size of the provided buffer.
     BufferTooSmall { min: usize, len: usize },
+    /// The input data size doesn't match the expected size.
+    ///
+    /// # Fields
+    ///
+    /// * `expected` - The expected data size in bytes.
+    /// * `got` - The actual size of the provided data.
+    InvalidDataSize { expected: usize, got: usize },
     /// An invalid character was encountered during decoding.
     ///
     /// # Fields
@@ -281,6 +288,9 @@ impl fmt::Display for Error {
         match self {
             Self::BufferTooSmall { min, len } => {
                 write!(f, "Buffer size '{len}' is less than required '{min}'")
+            }
+            Self::InvalidDataSize { expected, got } => {
+                write!(f, "Invalid data size '{got}', expected: '{expected}'")
             }
             Self::InvalidCharacter { char, index } => {
                 write!(f, "Invalid character '{char}' at position {index}")
