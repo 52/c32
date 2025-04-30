@@ -9,6 +9,7 @@
 #![no_std]
 #![allow(clippy::doc_markdown)]
 #![allow(clippy::wildcard_imports)]
+#![allow(clippy::missing_errors_doc)]
 #![allow(clippy::items_after_statements)]
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
 #![cfg_attr(docsrs, feature(doc_alias))]
@@ -47,7 +48,8 @@
 //!
 //! ## In `#![no_std]` Environments
 //!
-//! For environments without allocation support, the library provides buffer-based APIs:
+//! For environments without allocation support, the library provides
+//! buffer-based APIs:
 //!
 //! ```rust
 //! // encoding with a pre-allocated buffer
@@ -71,33 +73,17 @@
 //! # Ok::<(), c32::Error>(())
 //! ```
 //!
-//! ## Using the `Buffer` Type (Const-Friendly)
+//! ## Checksums
 //!
-//! The library provides a [`Buffer`] type that can be used in const contexts:
-//!
-//! ```rust
-//! use c32::Buffer;
-//!
-//! const INPUT: [u8; 3] = [42, 42, 42];
-//! const ENCODED: Buffer<5> = Buffer::encode(&INPUT);
-//! assert_eq!(ENCODED.as_str(), "2MAHA");
-//!
-//! const DECODED: Buffer<5> = Buffer::decode(b"2MAHA");
-//! assert_eq!(DECODED.as_bytes(), [42, 42, 42]);
-//! ```
-//!
-//! ## Checksums (`#[feature = "check"]`)
-//!
-//! The `check` feature enables methods for encoding data with SHA256-based checksum verification.
+//! The `check` feature enables methods for encoding data with SHA256-based
+//! checksum verification.
 //!
 //! The encoded data follows this layout:
-//!
 //! ```text
 //! [version (1B)] + [payload (nB)] + [checksum (4B)]
 //! ```
 //!
 //! And is computed by...
-//!
 //! ```text
 //! 1. Concatenating the version byte with the payload bytes.
 //! 2. Taking the SHA256 hash of the concatenated bytes.
@@ -106,7 +92,6 @@
 //! ```
 //!
 //! ### Examples
-//!
 //! ```rust
 //! # #[cfg(all(feature = "check", feature = "alloc"))] {
 //! let bytes = b"usque ad finem";
@@ -115,7 +100,6 @@
 //! # }
 //! # Ok::<(), c32::Error>(())
 //! ```
-//!
 //! ```rust
 //! # #[cfg(all(feature = "check", feature = "alloc"))] {
 //! let encoded = "P7AWVHENJJ0RB441K6JVK5DNJ7J3V5";
@@ -147,6 +131,7 @@ extern crate alloc;
 
 use core::error;
 use core::fmt;
+use core::marker;
 use core::slice;
 use core::str;
 
@@ -172,15 +157,13 @@ pub mod checksum {
 
     use super::*;
 
-    /// Length of the checksum in bytes.
+    /// Length of the [`Checksum`] in bytes.
     pub const BYTE_LENGTH: usize = 4;
 
     /// A type alias for a [`Sha256`] checksum.
     pub type Checksum = [u8; BYTE_LENGTH];
 
     /// Computes a 4-byte [`Checksum`]from a byte array and version.
-    ///
-    /// # Notes
     ///
     /// The checksum is computed by:
     ///
@@ -192,7 +175,8 @@ pub mod checksum {
     /// # Examples
     ///
     /// ```rust
-    /// # use c32::checksum;
+    /// use c32::checksum;
+    ///
     /// let bytes = [42, 42, 42];
     /// let sum = checksum::compute(&bytes, 0);
     /// assert_eq!(sum.len(), 4);
@@ -210,7 +194,8 @@ pub mod checksum {
     /// # Examples
     ///
     /// ```rust
-    /// # use c32::checksum;
+    /// use c32::checksum;
+    ///
     /// let hash = [1, 2, 3, 4, 5, 6, 7, 8];
     /// let sum = checksum::from_slice(&hash);
     /// assert_eq!(sum, [1, 2, 3, 4]);
@@ -229,60 +214,64 @@ pub(crate) const ALPHABET: &[u8; 32] = b"0123456789ABCDEFGHJKMNPQRSTVWXYZ";
 
 /// A mapping from ASCII characters to their Crockford Base32 values.
 pub(crate) const BYTE_MAP: [i8; 128] = [
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, -1, -1, -1, -1, -1, -1, -1, 10, 11, 12, 13, 14, 15, 16, 17, 1,
-    18, 19, 1, 20, 21, 0, 22, 23, 24, 25, 26, -1, 27, 28, 29, 30, 31, -1, -1, -1, -1, -1, -1, 10,
-    11, 12, 13, 14, 15, 16, 17, 1, 18, 19, 1, 20, 21, 0, 22, 23, 24, 25, 26, -1, 27, 28, 29, 30,
-    31, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, -1,
+    -1, -1, -1, -1, -1, -1, 10, 11, 12, 13, 14, 15, 16, 17, 1, 18, 19, 1, 20,
+    21, 0, 22, 23, 24, 25, 26, -1, 27, 28, 29, 30, 31, -1, -1, -1, -1, -1, -1,
+    10, 11, 12, 13, 14, 15, 16, 17, 1, 18, 19, 1, 20, 21, 0, 22, 23, 24, 25,
+    26, -1, 27, 28, 29, 30, 31, -1, -1, -1, -1, -1,
 ];
 
 /// Error variants for fallible Crockford Base32 operations.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Error {
     /// The buffer size is insufficient for the operation.
-    BufferTooSmall {
-        /// The minimum required buffer size in bytes.
-        min: usize,
-        /// The actual size of the provided buffer in bytes.
-        len: usize,
-    },
+    ///
+    /// # Fields
+    ///
+    /// * `min` - The minimum required buffer size.
+    /// * `len` - The actual size of the provided buffer.
+    BufferTooSmall { min: usize, len: usize },
     /// An invalid character was encountered during decoding.
-    InvalidCharacter {
-        /// The invalid character found in the input.
-        char: char,
-        /// The byte index of the character.
-        index: usize,
-    },
+    ///
+    /// # Fields
+    ///
+    /// * `char` - The invalid character found in the input.
+    /// * `index` - The byte index of the character.
+    InvalidCharacter { char: char, index: usize },
     /// The expected prefix character is missing.
-    MissingPrefix {
-        /// The expected prefix character.
-        char: char,
-        /// The actual first character found (or None if the string is empty).
-        got: Option<char>,
-    },
+    ///
+    /// # Fields
+    ///
+    /// * `char` - The expected prefix character.
+    /// * `got` - The actual first character found.
+    MissingPrefix { char: char, got: Option<char> },
     #[cfg(feature = "check")]
     /// The provided version byte is invalid.
-    InvalidVersion {
-        /// A description of the expected version constraints.
-        expected: &'static str,
-        /// The invalid version byte.
-        version: u8,
-    },
+    ///
+    /// # Fields
+    ///
+    /// * `expected` - The expected version constraints.
+    /// * `version` - The invalid version byte.
+    InvalidVersion { expected: &'static str, version: u8 },
     /// The input has fewer bytes than are required.
+    ///
+    /// # Fields
+    ///
+    /// * `min` - The minimum required amount of bytes.
+    /// * `len` - The actual number of bytes provided.
     #[cfg(feature = "check")]
-    InsufficientData {
-        /// The minimum required amount of bytes.
-        min: usize,
-        /// The actual number of bytes provided.
-        len: usize,
-    },
+    InsufficientData { min: usize, len: usize },
     /// The computed checksum does not match the expected sum.
+    ///
+    /// # Fields
+    ///
+    /// * `expected` - The expected checksum.
+    /// * `got` - The actual checksum.
     #[cfg(feature = "check")]
     ChecksumMismatch {
-        /// The expected checksum.
         expected: checksum::Checksum,
-        /// The actual checksum.
         got: checksum::Checksum,
     },
 }
@@ -320,427 +309,142 @@ impl error::Error for Error {}
 /// Result type for fallible Crockford Base32 operations.
 pub type Result<T> = core::result::Result<T, Error>;
 
+/// A marker trait for Crockford Base32 variations.
+///
+/// # Generics
+///
+/// * `PREFIX` - Whether to include a prefix character.
+pub trait Encoding<const PREFIX: bool> {}
+
+/// [`Encoding`] implementations.
+///
+/// This module exports various [`Encoding`] types.
+pub mod en {
+    use super::*;
+
+    /// Default Crockford Base32 encoding.
+    ///
+    /// # Generics
+    ///
+    /// * `PREFIX` - Whether to include a prefix character.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use c32::en::Default;
+    /// use c32::Buffer;
+    ///
+    /// // Default encoding w/o prefix
+    /// let en = Buffer::<5, false, Default>::encode(&[42, 42, 42]);
+    /// assert_eq!(en.as_str(), "2MAHA");
+    ///
+    /// // Default encoding with prefix
+    /// let en = Buffer::<6, true, Default>::encode(&[42, 42, 42], 'S');
+    /// assert_eq!(en.as_str(), "S2MAHA");
+    /// ```
+    pub struct Default;
+    impl<const PREFIX: bool> Encoding<PREFIX> for Default {}
+
+    #[cfg(feature = "check")]
+    mod __check {
+        use super::*;
+
+        /// Crockford Base32 encoding with checksum validation.
+        ///
+        /// This encoding format includes a 4-byte `Checksum`.
+        ///
+        /// # Generics
+        ///
+        /// * `PREFIX` - Whether to include a prefix character.
+        ///
+        /// # Examples
+        ///
+        /// ```rust
+        /// use c32::en::Check;
+        /// use c32::Buffer;
+        ///
+        /// // Check encoding w/o prefix
+        /// let en = Buffer::<13, false, Check>::encode(&[42, 42, 42], 0);
+        /// assert_eq!(en.as_str(), "0AHA59B9201Z");
+        ///
+        /// // Check encoding with prefix
+        /// let en = Buffer::<14, true, Check>::encode(&[42, 42, 42], 'S', 0);
+        /// assert_eq!(en.as_str(), "S0AHA59B9201Z");
+        /// ```
+        pub struct Check;
+        impl<const PREFIX: bool> Encoding<PREFIX> for Check {}
+    }
+
+    #[cfg(feature = "check")]
+    pub use __check::*;
+}
+
 /// A fixed-size buffer for encoding or decoding Crockford's Base32.
 ///
 /// [`Buffer`] manages a fixed-size array of bytes and tracks the number of
 /// bytes written during encoding and decoding operations, and is primarily
 /// designed for use in a constant context.
 ///
+/// # Generics
+///
+/// * `LEN` - The size of the byte array in bytes.
+/// * `PREFIX` - Whether to include a prefix character, defaults to `false`.
+/// * `E` - The [`Encoding`] format to use, defaults to [`en::Default`].
+///
 /// # Examples
 ///
 /// ```rust
-/// # use c32::Buffer;
-/// const INPUT: [u8; 3] = [42, 42, 42];
-/// const ENC: Buffer<5> = Buffer::encode(&INPUT);
-/// assert_eq!(ENC.as_str(), "2MAHA");
-/// assert_eq!(ENC.pos(), 5);
-/// ```
+/// use c32::Buffer;
 ///
-/// ```rust
-/// # use c32::Buffer;
-/// const INPUT: [u8; 5] = *b"2MAHA";
-/// const DEC: Buffer<5> = Buffer::decode(&INPUT);
-/// assert_eq!(DEC.as_bytes(), [42, 42, 42]);
-/// assert_eq!(DEC.pos(), 3);
+/// const BYTES: [u8; 3] = [42, 42, 42];
+/// const EN: Buffer<5> = Buffer::<5>::encode(&BYTES);
+/// assert_eq!(EN.as_str(), "2MAHA");
+///
+/// const DE: Buffer<5> = Buffer::<5>::decode(EN.as_bytes());
+/// assert_eq!(DE.as_bytes(), [42, 42, 42]);
 /// ```
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct Buffer<const N: usize> {
+pub struct Buffer<
+    const LEN: usize,
+    const PREFIX: bool = false,
+    E: Encoding<PREFIX> = en::Default,
+> {
     /// The underlying byte array.
-    dst: [u8; N],
-    /// The number of written bytes to the `dst` array.
-    dst_pos: usize,
+    __raw: [u8; LEN],
+    /// The number of written bytes to the buffer.
+    __pos: usize,
+    /// The associated [`Encoding`] format `E`.
+    __marker: marker::PhantomData<E>,
 }
 
-impl<const N: usize> Buffer<N> {
-    /// An empty [`Buffer`] with no bytes written.
+impl<const LEN: usize, const PREFIX: bool, E: Encoding<PREFIX>>
+    Buffer<LEN, PREFIX, E>
+{
+    /// An empty buffer with no bytes written.
     ///
     /// # Examples
     ///
     /// ```rust
-    /// # use c32::Buffer;
-    /// const BUFFER: Buffer<1> = Buffer::<1>::EMPTY;
-    /// assert_eq!(BUFFER.as_bytes(), &[]);
-    /// assert_eq!(BUFFER.pos(), 0);
+    /// use c32::Buffer;
+    ///
+    /// let buffer = Buffer::<10>::EMPTY;
+    /// assert_eq!(buffer.pos(), 0);
+    /// assert_eq!(buffer.as_bytes(), &[]);
     /// ```
-    pub const EMPTY: Self = Buffer {
-        dst: [0u8; N],
-        dst_pos: 0,
+    pub const EMPTY: Self = Self {
+        __raw: [0u8; LEN],
+        __pos: 0,
+        __marker: marker::PhantomData,
     };
 
-    /// Encodes a byte array into a [`Buffer`].
+    /// Creates a new [`Buffer`].
     ///
-    /// # Panics
-    ///
-    /// This method panics if:
-    ///
-    /// - The buffer size `N` is `N >= encoded_len(M)`.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// # use c32::Buffer;
-    /// const INPUT: [u8; 3] = [42, 42, 42];
-    /// const ENC: Buffer<5> = Buffer::encode(&INPUT);
-    /// assert_eq!(ENC.as_str(), "2MAHA");
-    /// ```
-    #[inline]
-    #[must_use]
-    pub const fn encode<const M: usize>(src: &[u8; M]) -> Buffer<N> {
-        assert!(N >= encoded_len(M), "Size 'N' is too small");
-
-        // Allocate the output buffer.
-        let mut dst = [0u8; N];
-
-        // Encode the input to the buffer.
-        let dst_pos = __internal::en(src, 0, M, &mut dst, 0, None);
-
-        Buffer { dst, dst_pos }
-    }
-
-    /// Decodes a slice of encoded bytes into a [`Buffer`].
-    ///
-    /// # Panics
-    ///
-    /// This method panics if:
-    ///
-    /// - The buffer size `N` is `N >= decoded_len(src.len())`.
-    /// - The input contains invalid Crockford Base32 characters.
-    /// - The input contains non-ASCII bytes.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// # use c32::Buffer;
-    /// const INPUT: [u8; 5] = *b"2MAHA";
-    /// const DEC: Buffer<5> = Buffer::decode(&INPUT);
-    /// assert_eq!(DEC.as_bytes(), [42, 42, 42]);
-    /// ```
-    #[inline]
-    #[must_use]
-    pub const fn decode(src: &[u8]) -> Buffer<N> {
-        assert!(N >= decoded_len(src.len()), "Size 'N' is too small");
-
-        // Allocate the output buffer.
-        let mut dst = [0u8; N];
-
-        // Decode the input to the buffer.
-        let dst_pos = match __internal::de(src, 0, src.len(), &mut dst, 0) {
-            Ok(pos) => pos,
-            Err(Error::InvalidCharacter { char: _, index: _ }) => {
-                panic!("Input contains invalid characters")
-            }
-            _ => unreachable!(),
-        };
-
-        Buffer { dst, dst_pos }
-    }
-
-    /// Encodes a byte array with a prefix into a [`Buffer`].
-    ///
-    /// # Panics
-    ///
-    /// This method panics if:
-    ///
-    /// - The buffer size `N` is `N >= encoded_len(M)`.
-    /// - The prefix is a non-ASCII character.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// # use c32::Buffer;
-    /// const INPUT: [u8; 3] = [42, 42, 42];
-    /// const ENC: Buffer<6> = Buffer::encode_prefixed(&INPUT, 'S');
-    /// assert_eq!(ENC.as_str(), "S2MAHA");
-    /// ```
-    #[inline]
-    #[must_use]
-    pub const fn encode_prefixed<const M: usize>(src: &[u8; M], prefix: char) -> Buffer<N> {
-        assert!(N > encoded_len(M), "Size 'N' is too small");
-        assert!(prefix.is_ascii(), "Prefix must be an ASCII character");
-
-        // Allocate the output buffer.
-        let mut dst = [0u8; N];
-
-        // Prepend the prefix character.
-        dst[0] = prefix as u8;
-
-        // Encode the input to the buffer.
-        let dst_pos = __internal::en(src, 0, M, &mut dst, 1, None) + 1;
-
-        Buffer { dst, dst_pos }
-    }
-
-    /// Decodes a slice of prefixed encoded bytes into a [`Buffer`].
-    ///
-    /// # Panics
-    ///
-    /// This method panics if:
-    ///
-    /// - The buffer size `N` is `N >= decoded_len(src.len() - 1)`.
-    /// - The input contains invalid Crockford Base32 characters.
-    /// - The input does not start with the expected prefix.
-    /// - The input contains non-ASCII bytes.
-    /// - The prefix is a non-ASCII character.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// # use c32::Buffer;
-    /// const INPUT: [u8; 6] = *b"S2MAHA";
-    /// const DEC: Buffer<6> = Buffer::decode_prefixed(&INPUT, 'S');
-    /// assert_eq!(DEC.as_bytes(), [42, 42, 42]);
-    /// ```
-    #[inline]
-    #[must_use]
-    pub const fn decode_prefixed(src: &[u8], prefix: char) -> Buffer<N> {
-        assert!(N >= decoded_len(src.len() - 1), "Size 'N' is too small");
-        assert!(prefix.is_ascii(), "Prefix must be an ASCII character");
-        assert!(src[0] == prefix as u8, "Input must start with prefix");
-
-        // Allocate the output buffer.
-        let mut dst = [0u8; N];
-
-        // Decode the input (without prefix) to the buffer.
-        let dst_pos = match __internal::de(src, 1, src.len() - 1, &mut dst, 0) {
-            Ok(pos) => pos,
-            Err(Error::InvalidCharacter { char: _, index: _ }) => {
-                panic!("Input contains invalid characters")
-            }
-            _ => unreachable!(),
-        };
-
-        Buffer { dst, dst_pos }
-    }
-
-    /// Encodes a byte array with a checksum into a [`Buffer`].
-    ///
-    /// # Panics
-    ///
-    /// This method panics if:
-    ///
-    /// - The buffer size `N` is `N >= encoded_check_len(M)`.
-    /// - The version is greater than or equal to 32.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// # use c32::Buffer;
-    /// const INPUT: [u8; 3] = [42, 42, 42];
-    /// const ENC: Buffer<13> = Buffer::encode_check(&INPUT, 0);
-    /// assert_eq!(ENC.as_str(), "0AHA59B9201Z");
-    /// ```
-    #[inline]
-    #[must_use]
-    #[cfg(feature = "check")]
-    pub const fn encode_check<const M: usize>(src: &[u8; M], version: u8) -> Buffer<N> {
-        assert!(N >= encoded_check_len(M), "Size 'N' is too small");
-        assert!(version < 32, "Version must be < 32");
-
-        // Allocate the output buffer.
-        let mut dst = [0u8; N];
-
-        // Prepend the version character.
-        dst[0] = ALPHABET[version as usize];
-
-        // Compute the checksum.
-        let sum = checksum::compute(src, version);
-
-        // Encode the input and checksum to the buffer.
-        let dst_pos = __internal::en(src, 0, M, &mut dst, 1, Some(sum)) + 1;
-
-        Buffer { dst, dst_pos }
-    }
-
-    /// Decodes a slice of check-encoded bytes into a [`Buffer`].
-    ///
-    /// # Panics
-    ///
-    /// This method panics if:
-    ///
-    /// - The buffer size `N` is insufficient for the decoded output.
-    /// - The input is shorter than 2 bytes.
-    /// - The input contains invalid Crockford Base32 characters.
-    /// - The input contains non-ASCII bytes.
-    /// - The version is greater than or equal to 32.
-    /// - The computed checksum does not match the embedded checksum.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// # use c32::Buffer;
-    /// const INPUT: [u8; 12] = *b"0AHA59B9201Z";
-    /// const DEC: Buffer<12> = Buffer::decode_check(&INPUT);
-    /// assert_eq!(DEC.as_bytes(), [42, 42, 42]);
-    /// ```
-    #[inline]
-    #[must_use]
-    #[cfg(feature = "check")]
-    pub const fn decode_check(src: &[u8]) -> Buffer<N> {
-        assert!(N >= decoded_check_len(src.len()), "Size 'N' is too small");
-        assert!(src.len() >= 2, "Input must be at least 2 bytes");
-
-        // Allocate the output buffer.
-        let mut dst = [0u8; N];
-
-        // Extract the version byte.
-        let mut buffer = [0u8; 1];
-        let _ = match __internal::de(&[src[0]], 0, 1, &mut buffer, 0) {
-            Ok(pos) => pos,
-            Err(Error::InvalidCharacter { char: _, index: _ }) => {
-                panic!("Input contains invalid characters")
-            }
-            _ => unreachable!(),
-        };
-
-        // Assert that the version is < 32.
-        let version = buffer[0];
-        assert!(version < 32, "Version must be < 32");
-
-        // Decode the payload.
-        let offset = match __internal::de(src, 1, src.len() - 1, &mut dst, 0) {
-            Ok(pos) => pos,
-            Err(Error::InvalidCharacter { char: _, index: _ }) => {
-                panic!("Input contains invalid characters")
-            }
-            _ => unreachable!(),
-        };
-
-        let dst_pos = offset - checksum::BYTE_LENGTH;
-
-        // Extract the checksum.
-        let mut sum = [0u8; checksum::BYTE_LENGTH];
-        __internal::memcpy(&mut sum, 0, &dst, dst_pos, checksum::BYTE_LENGTH);
-
-        // Compute the expected checksum.
-        let mut expected = [0u8; checksum::BYTE_LENGTH];
-        __internal::memcpy(&mut expected, 0, &dst, dst_pos, 4);
-
-        // Assert that the computed and actual checksums match.
-        assert!(__internal::memcmp(&expected, &sum, 4), "Checksum mismatch");
-
-        Buffer { dst, dst_pos }
-    }
-
-    /// Encodes a byte array with a checksum and prefix into a [`Buffer`].
-    ///
-    /// # Panics
-    ///
-    /// This method panics if:
-    ///
-    /// - The buffer size `N` is insufficient for the encoded output and prefix.
-    /// - The prefix is not an ASCII character.
-    /// - The version is greater than or equal to 32.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// # use c32::Buffer;
-    /// const INPUT: [u8; 3] = [42, 42, 42];
-    /// const ENC: Buffer<14> = Buffer::encode_check_prefixed(&INPUT, 'S', 0);
-    /// assert_eq!(ENC.as_str(), "S0AHA59B9201Z");
-    /// ```
-    #[inline]
-    #[must_use]
-    #[cfg(feature = "check")]
-    pub const fn encode_check_prefixed<const M: usize>(
-        src: &[u8; M],
-        prefix: char,
-        version: u8,
-    ) -> Buffer<N> {
-        assert!(N > encoded_check_len(M), "Size 'N' is too small");
-        assert!(prefix.is_ascii(), "Prefix must be an ASCII character");
-        assert!(version < 32, "Version must be < 32");
-
-        // Allocate the output buffer.
-        let mut dst = [0u8; N];
-
-        // Prepend the prefix character.
-        dst[0] = prefix as u8;
-
-        // Prepend the version character.
-        dst[1] = ALPHABET[version as usize];
-
-        // Compute the checksum.
-        let sum = checksum::compute(src, version);
-
-        // Encode the input and checksum to the buffer.
-        let dst_pos = __internal::en(src, 0, M, &mut dst, 2, Some(sum)) + 2;
-
-        Buffer { dst, dst_pos }
-    }
-
-    /// Decodes a slice of prefixed check-encoded bytes into a [`Buffer`].
-    ///
-    /// # Panics
-    ///
-    /// This method panics if:
-    ///
-    /// - The buffer size `N` is insufficient for the decoded output.
-    /// - The input is shorter than 3 bytes.
-    /// - The prefix is not an ASCII character.
-    /// - The input does not start with the expected prefix.
-    /// - The input contains invalid Crockford Base32 characters.
-    /// - The input contains non-ASCII bytes.
-    /// - The version version is greater than or equal to 32.
-    /// - The computed checksum does not match the embedded checksum.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// # use c32::Buffer;
-    /// const INPUT: [u8; 13] = *b"S0AHA59B9201Z";
-    /// const DEC: Buffer<13> = Buffer::decode_check_prefixed(&INPUT, 'S');
-    /// assert_eq!(DEC.as_bytes(), [42, 42, 42]);
-    /// ```
-    #[inline]
-    #[must_use]
-    #[cfg(feature = "check")]
-    pub const fn decode_check_prefixed(src: &[u8], prefix: char) -> Buffer<N> {
-        assert!(N >= decoded_check_len(src.len() - 1), "'N' is too small");
-        assert!(src.len() >= 3, "Input must be at least 3 bytes");
-        assert!(prefix.is_ascii(), "Prefix must be an ASCII character");
-        assert!(src[0] == prefix as u8, "Input must start with prefix");
-
-        // Extract the version byte.
-        let mut buffer = [0u8; 1];
-        let _ = match __internal::de(&[src[1]], 0, 1, &mut buffer, 0) {
-            Ok(pos) => pos,
-            Err(Error::InvalidCharacter { char: _, index: _ }) => {
-                panic!("Input contains invalid characters")
-            }
-            _ => unreachable!(),
-        };
-
-        // Assert that the version is < 32.
-        let version = buffer[0];
-        assert!(version < 32, "Version must be < 32");
-
-        // Allocate the output buffer.
-        let mut dst = [0u8; N];
-
-        // Decode the payload.
-        let offset = match __internal::de(src, 2, src.len() - 2, &mut dst, 0) {
-            Ok(pos) => pos,
-            Err(Error::InvalidCharacter { char: _, index: _ }) => {
-                panic!("Input contains invalid characters")
-            }
-            _ => unreachable!(),
-        };
-
-        let dst_pos = offset - checksum::BYTE_LENGTH;
-
-        // Extract the checksum.
-        let mut sum = [0u8; checksum::BYTE_LENGTH];
-        __internal::memcpy(&mut sum, 0, &dst, dst_pos, checksum::BYTE_LENGTH);
-
-        // Compute the expected checksum.
-        let mut expected = [0u8; checksum::BYTE_LENGTH];
-        __internal::memcpy(&mut expected, 0, &dst, dst_pos, 4);
-
-        // Assert that the computed and actual checksums match.
-        assert!(__internal::memcmp(&expected, &sum, 4), "Checksum mismatch");
-
-        Buffer { dst, dst_pos }
+    /// This is an internal method.
+    const fn new(__raw: [u8; LEN], __pos: usize) -> Self {
+        Self {
+            __raw,
+            __pos,
+            __marker: marker::PhantomData,
+        }
     }
 
     /// Returns the number of bytes written to the buffer.
@@ -748,15 +452,16 @@ impl<const N: usize> Buffer<N> {
     /// # Examples
     ///
     /// ```rust
-    /// # use c32::Buffer;
+    /// use c32::Buffer;
+    ///
     /// const INPUT: [u8; 3] = [42, 42, 42];
-    /// const ENC: Buffer<5> = Buffer::encode(&INPUT);
-    /// assert_eq!(ENC.pos(), 5);
+    /// const EN: Buffer<5> = Buffer::<5>::encode(&INPUT);
+    /// assert_eq!(EN.pos(), 5);
     /// ```
     #[inline]
     #[must_use]
     pub const fn pos(&self) -> usize {
-        self.dst_pos
+        self.__pos
     }
 
     /// Returns a string slice of the written bytes.
@@ -764,15 +469,16 @@ impl<const N: usize> Buffer<N> {
     /// # Examples
     ///
     /// ```rust
-    /// # use c32::Buffer;
+    /// use c32::Buffer;
+    ///
     /// const INPUT: [u8; 3] = [42, 42, 42];
-    /// const ENC: Buffer<5> = Buffer::encode(&INPUT);
-    /// assert_eq!(ENC.as_str(), "2MAHA");
+    /// const EN: Buffer<5> = Buffer::<5>::encode(&INPUT);
+    /// assert_eq!(EN.as_str(), "2MAHA");
     /// ```
     #[inline]
     #[must_use]
     pub const fn as_str(&self) -> &str {
-        // SAFETY: We only push valid UTF-8 to `dst`.
+        // SAFETY: We only push valid UTF-8 to `self.__raw`.
         unsafe { str::from_utf8_unchecked(self.as_bytes()) }
     }
 
@@ -781,16 +487,17 @@ impl<const N: usize> Buffer<N> {
     /// # Examples
     ///
     /// ```rust
-    /// # use c32::Buffer;
+    /// use c32::Buffer;
+    ///
     /// const INPUT: [u8; 3] = [42, 42, 42];
-    /// const ENC: Buffer<5> = Buffer::encode(&INPUT);
-    /// assert_eq!(ENC.as_bytes(), b"2MAHA");
+    /// const EN: Buffer<5> = Buffer::<5>::encode(&INPUT);
+    /// assert_eq!(EN.as_bytes(), b"2MAHA");
     /// ```
     #[inline]
     #[must_use]
     pub const fn as_bytes(&self) -> &[u8] {
-        // SAFETY: `dst_pos` is always within bounds.
-        unsafe { slice::from_raw_parts(self.as_ptr(), self.dst_pos) }
+        // SAFETY: `self.__pos` is always within bounds.
+        unsafe { slice::from_raw_parts(self.as_ptr(), self.__pos) }
     }
 
     /// Returns a raw pointer to the buffer's data.
@@ -799,13 +506,761 @@ impl<const N: usize> Buffer<N> {
     ///
     /// ```rust
     /// # use c32::Buffer;
-    /// let buffer = Buffer::<10>::EMPTY;
+    /// let buffer = Buffer::<10, false>::EMPTY;
     /// let ptr = buffer.as_ptr();
     /// ```
     #[inline]
     #[must_use]
     pub const fn as_ptr(&self) -> *const u8 {
-        self.dst.as_ptr()
+        self.__raw.as_ptr()
+    }
+}
+
+impl<const N: usize> Buffer<N, false, en::Default> {
+    /// Encodes a byte array into a [`Buffer`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use c32::Buffer;
+    ///
+    /// const INPUT: [u8; 3] = [42, 42, 42];
+    /// const EN: Buffer<5> = Buffer::<5>::encode(&INPUT);
+    /// assert_eq!(EN.as_str(), "2MAHA");
+    /// ```
+    #[inline]
+    #[must_use]
+    pub const fn encode<const M: usize>(src: &[u8; M]) -> Self {
+        const { assert!(N >= encoded_len(M), "Size 'N' is too small") }
+
+        // Allocate the output buffer.
+        let mut __raw = [0u8; N];
+
+        // Encode the input into the buffer.
+        let __pos = __internal::en(src, 0, M, &mut __raw, 0, None);
+
+        Self::new(__raw, __pos)
+    }
+
+    /// Encodes a byte array into a [`Buffer`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use c32::Buffer;
+    /// use c32::Error;
+    ///
+    /// let input = [42, 42, 42];
+    /// let en = Buffer::<5>::try_encode(&input)?;
+    /// assert_eq!(en.as_str(), "2MAHA");
+    /// # Ok::<(), Error>(())
+    /// ```
+    #[inline]
+    pub const fn try_encode<const M: usize>(src: &[u8; M]) -> Result<Self> {
+        // Assert that the buffer has enough capacity.
+        let capacity = encoded_len(M);
+        if N < capacity {
+            return Err(Error::BufferTooSmall {
+                min: capacity,
+                len: N,
+            });
+        }
+
+        Ok(Self::encode(src))
+    }
+
+    /// Decodes a slice of encoded bytes into a [`Buffer`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use c32::Buffer;
+    ///
+    /// const INPUT: [u8; 5] = *b"2MAHA";
+    /// const DE: Buffer<5> = Buffer::<5>::decode(&INPUT);
+    /// assert_eq!(DE.as_bytes(), [42, 42, 42]);
+    /// ```
+    #[inline]
+    #[must_use]
+    pub const fn decode(src: &[u8]) -> Self {
+        assert!(N >= decoded_len(src.len()), "Size 'N' is too small");
+
+        // Allocate the output buffer.
+        let mut __raw = [0u8; N];
+
+        // Decode the input to the buffer.
+        let __pos = match __internal::de(src, 0, src.len(), &mut __raw, 0) {
+            Ok(pos) => pos,
+            Err(Error::InvalidCharacter { char: _, index: _ }) => {
+                panic!("Input contains invalid characters")
+            }
+            _ => unreachable!(),
+        };
+
+        Self::new(__raw, __pos)
+    }
+
+    /// Decodes a slice of encoded bytes into a [`Buffer`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use c32::Error;
+    /// use c32::Buffer;
+    ///
+    /// let input = b"2MAHA";
+    /// let de = Buffer::<5>::try_decode(input)?;
+    /// assert_eq!(de.as_bytes(), [42, 42, 42]);
+    /// # Ok::<(), Error>(())
+    /// ```
+    #[inline]
+    pub const fn try_decode(src: &[u8]) -> Result<Self> {
+        // Assert that the buffer has enough capacity.
+        let capacity = decoded_len(src.len());
+        if N < capacity {
+            return Err(Error::BufferTooSmall {
+                min: capacity,
+                len: N,
+            });
+        }
+
+        Ok(Self::decode(src))
+    }
+}
+
+impl<const N: usize> Buffer<N, true, en::Default> {
+    /// Encodes a byte array with a prefix into a [`Buffer`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use c32::Buffer;
+    ///
+    /// const INPUT: [u8; 3] = [42, 42, 42];
+    /// const EN: Buffer<6, true> = Buffer::<6, true>::encode(&INPUT, 'S');
+    /// assert_eq!(EN.as_str(), "S2MAHA");
+    /// ```
+    #[inline]
+    #[must_use]
+    pub const fn encode<const M: usize>(src: &[u8; M], prefix: char) -> Self {
+        const { assert!(N > encoded_len(M), "Size 'N' is too small") }
+        assert!(prefix.is_ascii(), "Prefix must be an ASCII character");
+
+        // Allocate the output buffer.
+        let mut __raw = [0u8; N];
+
+        // Prepend the prefix character.
+        __raw[0] = prefix as u8;
+
+        // Encode the input to the buffer.
+        let __pos = __internal::en(src, 0, M, &mut __raw, 1, None) + 1;
+
+        Self::new(__raw, __pos)
+    }
+
+    /// Encodes a byte array with a prefix into a [`Buffer`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use c32::Error;
+    /// use c32::Buffer;
+    ///
+    /// let input = [42, 42, 42];
+    /// let en = Buffer::<6, true>::try_encode(&input, 'S')?;
+    /// assert_eq!(en.as_str(), "S2MAHA");
+    /// # Ok::<(), Error>(())
+    /// ```
+    #[inline]
+    pub const fn try_encode<const M: usize>(
+        src: &[u8; M],
+        prefix: char,
+    ) -> Result<Self> {
+        const { assert!(N > encoded_len(M), "Size 'N' is too small") }
+
+        // Assert that the prefix is ASCII.
+        if !prefix.is_ascii() {
+            return Err(Error::InvalidCharacter {
+                char: prefix,
+                index: 0,
+            });
+        }
+
+        Ok(Self::encode(src, prefix))
+    }
+
+    /// Decodes a slice of prefixed encoded bytes into a [`Buffer`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use c32::Buffer;
+    ///
+    /// const INPUT: [u8; 6] = *b"S2MAHA";
+    /// const DE: Buffer<6, true> = Buffer::<6, true>::decode(&INPUT, 'S');
+    /// assert_eq!(DE.as_bytes(), [42, 42, 42]);
+    /// ```
+    #[inline]
+    #[must_use]
+    pub const fn decode(src: &[u8], prefix: char) -> Self {
+        assert!(N >= decoded_len(src.len() - 1), "Size 'N' is too small");
+        assert!(prefix.is_ascii(), "Prefix must be an ASCII character");
+        assert!(!src.is_empty(), "Input must contain min. 1 character");
+        assert!(src[0] == prefix as u8, "Input must start with prefix");
+
+        // Allocate the output buffer.
+        let mut __raw = [0u8; N];
+
+        // Decode the input (without prefix) to the buffer.
+        let __pos = match __internal::de(src, 1, src.len() - 1, &mut __raw, 0) {
+            Ok(pos) => pos,
+            Err(Error::InvalidCharacter { char: _, index: _ }) => {
+                panic!("Input contains invalid characters")
+            }
+            _ => unreachable!(),
+        };
+
+        Self::new(__raw, __pos)
+    }
+
+    /// Decodes a slice of prefixed encoded bytes into a [`Buffer`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use c32::Error;
+    /// use c32::Buffer;
+    ///
+    /// let input = b"S2MAHA";
+    /// let de = Buffer::<6, true>::try_decode(input, 'S')?;
+    /// assert_eq!(de.as_bytes(), [42, 42, 42]);
+    /// # Ok::<(), Error>(())
+    /// ```
+    #[inline]
+    pub const fn try_decode(src: &[u8], prefix: char) -> Result<Self> {
+        // Assert that the input is not empty.
+        if src.is_empty() {
+            return Err(Error::MissingPrefix {
+                char: prefix,
+                got: None,
+            });
+        }
+
+        // Assert that the prefix is ASCII.
+        if !prefix.is_ascii() {
+            return Err(Error::InvalidCharacter {
+                char: prefix,
+                index: 0,
+            });
+        }
+
+        // Assert that the string starts with the prefix.
+        if src[0] != prefix as u8 {
+            return Err(Error::MissingPrefix {
+                char: prefix,
+                got: Some(src[0] as char),
+            });
+        }
+
+        // Assert that the buffer has enough capacity.
+        let capacity = decoded_len(src.len() - 1); // Always 1 for ASCII prefixes
+        if N < capacity {
+            return Err(Error::BufferTooSmall {
+                min: capacity,
+                len: N,
+            });
+        }
+
+        // Allocate the output buffer
+        let mut __raw = [0u8; N];
+
+        // Decode the input into the buffer.
+        let __pos = match __internal::de(src, 1, src.len() - 1, &mut __raw, 0) {
+            Ok(pos) => pos,
+            Err(Error::InvalidCharacter { char, index }) => {
+                return Err(Error::InvalidCharacter {
+                    char,
+                    index: index + 1,
+                });
+            }
+            Err(e) => return Err(e),
+        };
+
+        Ok(Self::new(__raw, __pos))
+    }
+}
+
+#[cfg(feature = "check")]
+impl<const N: usize> Buffer<N, false, en::Check> {
+    /// Encodes a byte array with a checksum into a [`Buffer`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_fmt
+    /// use c32::en::Check;
+    /// use c32::Buffer;
+    ///
+    /// const INPUT: [u8; 3] = [42, 42, 42];
+    /// const EN: Buffer<13, false, Check> = Buffer::<13, false, Check>::encode(&INPUT, 0);
+    /// assert_eq!(EN.as_str(), "0AHA59B9201Z");
+    /// ```
+    #[inline]
+    #[must_use]
+    pub const fn encode<const M: usize>(src: &[u8; M], version: u8) -> Self {
+        const { assert!(N >= encoded_check_len(M), "Size 'N' is too small") }
+        assert!(version < 32, "Version must be < 32");
+
+        // Allocate the output buffer.
+        let mut __raw = [0u8; N];
+
+        // Prepend the version character.
+        __raw[0] = ALPHABET[version as usize];
+
+        // Compute the checksum.
+        let sum = checksum::compute(src, version);
+
+        // Encode the input and checksum to the buffer.
+        let __pos = __internal::en(src, 0, M, &mut __raw, 1, Some(sum)) + 1;
+
+        Self::new(__raw, __pos)
+    }
+
+    /// Encodes a byte array with a checksum into a [`Buffer`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use c32::en::Check;
+    /// use c32::Buffer;
+    /// use c32::Error;
+    ///
+    /// let input = [42, 42, 42];
+    /// let en = Buffer::<13, false, Check>::try_encode(&input, 0)?;
+    /// assert_eq!(en.as_str(), "0AHA59B9201Z");
+    /// # Ok::<(), Error>(())
+    /// ```
+    #[inline]
+    pub const fn try_encode<const M: usize>(
+        src: &[u8; M],
+        version: u8,
+    ) -> Result<Self> {
+        const { assert!(N >= encoded_check_len(M), "Size 'N' is too small") }
+
+        // Assert that the version is valid (< 32).
+        if version >= 32 {
+            return Err(Error::InvalidVersion {
+                expected: "must be < 32",
+                version,
+            });
+        }
+
+        Ok(Self::encode(src, version))
+    }
+
+    /// Decodes a slice of check-encoded bytes into a [`Buffer`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_fmt
+    /// use c32::Buffer;
+    /// use c32::en::Check;
+    ///
+    /// const INPUT: [u8; 12] = *b"0AHA59B9201Z";
+    /// const RESULT: (Buffer<12, false, Check>, u8) = Buffer::<12, false, Check>::decode(&INPUT);
+    /// assert_eq!(RESULT.0.as_bytes(), [42, 42, 42]);
+    /// assert_eq!(RESULT.1, 0);
+    // ```
+    #[inline]
+    #[must_use]
+    pub const fn decode(src: &[u8]) -> (Self, u8) {
+        assert!(N >= decoded_check_len(src.len()), "Size 'N' is too small");
+        assert!(src.len() >= 2, "Input must contain min. 2 characters");
+
+        // Allocate the output buffer.
+        let mut __raw = [0u8; N];
+
+        // Extract the version byte
+        let mut buffer = [0u8; 1];
+        let _ = match __internal::de(&[src[0]], 0, 1, &mut buffer, 0) {
+            Ok(pos) => pos,
+            Err(Error::InvalidCharacter { char: _, index: _ }) => {
+                panic!("Input must not contain invalid characters")
+            }
+            _ => unreachable!(),
+        };
+
+        // Assert that the version is valid (< 32).
+        let version = buffer[0];
+        assert!(version < 32, "Version must be < 32");
+
+        // Decode the remaining bytes into the output buffer.
+        let __pos = match __internal::de(src, 1, src.len() - 1, &mut __raw, 0) {
+            Ok(pos) => pos,
+            Err(Error::InvalidCharacter { char: _, index: _ }) => {
+                panic!("Input must not contain invalid characters")
+            }
+            _ => unreachable!(),
+        };
+
+        let __pos = __pos - checksum::BYTE_LENGTH;
+
+        // Extract the checksum.
+        let mut sum = [0u8; checksum::BYTE_LENGTH];
+        __internal::memcpy(&mut sum, 0, &__raw, __pos, checksum::BYTE_LENGTH);
+
+        // Compute the expected checksum.
+        let mut expected = [0u8; checksum::BYTE_LENGTH];
+        __internal::memcpy(&mut expected, 0, &__raw, __pos, 4);
+
+        // Assert that the computed and actual checksums match.
+        assert!(__internal::memcmp(&expected, &sum, 4), "Checksum mismatch");
+
+        (Self::new(__raw, __pos), version)
+    }
+
+    /// Decodes a slice of check-encoded bytes into a [`Buffer`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use c32::Error;
+    /// use c32::en::Check;
+    /// use c32::Buffer;
+    ///
+    /// let input = b"0AHA59B9201Z";
+    /// let (de, version) = Buffer::<12, false, Check>::try_decode(input)?;
+    /// assert_eq!(de.as_bytes(), [42, 42, 42]);
+    /// assert_eq!(version, 0);
+    /// # Ok::<(), Error>(())
+    /// ```
+    #[inline]
+    pub const fn try_decode(src: &[u8]) -> Result<(Self, u8)> {
+        // Assert that the buffer has enough capacity.
+        let capacity = decoded_check_len(src.len());
+        if N < capacity {
+            return Err(Error::BufferTooSmall {
+                min: capacity,
+                len: N,
+            });
+        }
+
+        // Assert that the input bytes contain the minimum amount.
+        if src.len() < 2 {
+            return Err(Error::InsufficientData {
+                min: 2,
+                len: src.len(),
+            });
+        }
+
+        // Allocate the output buffer.
+        let mut __raw = [0u8; N];
+
+        // Extract the version byte
+        let mut buffer = [0u8; 1];
+        let _ = match __internal::de(&[src[0]], 0, 1, &mut buffer, 0) {
+            Ok(pos) => pos,
+            Err(err) => return Err(err),
+        };
+
+        // Assert that the version is valid (< 32).
+        let version = buffer[0];
+        if version >= 32 {
+            return Err(Error::InvalidVersion {
+                expected: "must be < 32",
+                version,
+            });
+        }
+
+        // Decode the remaining bytes into the output buffer.
+        let __pos = match __internal::de(src, 1, src.len() - 1, &mut __raw, 0) {
+            Ok(pos) => pos,
+            Err(Error::InvalidCharacter { char, index }) => {
+                return Err(Error::InvalidCharacter {
+                    char,
+                    index: index + 1,
+                });
+            }
+            Err(e) => return Err(e),
+        };
+
+        let __pos = __pos - checksum::BYTE_LENGTH;
+
+        // Extract the checksum.
+        let mut sum = [0u8; checksum::BYTE_LENGTH];
+        __internal::memcpy(&mut sum, 0, &__raw, __pos, checksum::BYTE_LENGTH);
+
+        // Compute the expected checksum.
+        let mut expected = [0u8; checksum::BYTE_LENGTH];
+        __internal::memcpy(&mut expected, 0, &__raw, __pos, 4);
+
+        // Assert that the computed and actual checksums match.
+        if !__internal::memcmp(&expected, &sum, checksum::BYTE_LENGTH) {
+            return Err(Error::ChecksumMismatch { expected, got: sum });
+        }
+
+        Ok((Self::new(__raw, __pos), version))
+    }
+}
+
+#[cfg(feature = "check")]
+impl<const N: usize> Buffer<N, true, en::Check> {
+    /// Encodes a byte array with a checksum and prefix into a [`Buffer`].
+    ///
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_fmt
+    /// use c32::en::Check;
+    /// use c32::Buffer;
+    ///
+    /// const INPUT: [u8; 3] = [42, 42, 42];
+    /// const EN: Buffer<14, true, Check> = Buffer::<14, true, Check>::encode(&INPUT, 'S', 0);
+    /// assert_eq!(EN.as_str(), "S0AHA59B9201Z");
+    /// ```
+    #[inline]
+    #[must_use]
+    pub const fn encode<const M: usize>(
+        src: &[u8; M],
+        prefix: char,
+        version: u8,
+    ) -> Self {
+        const { assert!(N > encoded_check_len(M), "Size 'N' is too small") }
+        assert!(version < 32, "Version must be < 32");
+
+        // Allocate the output buffer.
+        let mut __raw = [0u8; N];
+
+        // Prepend the prefix character.
+        __raw[0] = prefix as u8;
+
+        // Prepend the version character.
+        __raw[1] = ALPHABET[version as usize];
+
+        // Compute the checksum.
+        let sum = checksum::compute(src, version);
+
+        // Encode the input and checksum to the buffer.
+        let __pos = __internal::en(src, 0, M, &mut __raw, 2, Some(sum)) + 2;
+
+        Self::new(__raw, __pos)
+    }
+
+    /// Encodes a byte array with a checksum and prefix into a [`Buffer`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use c32::Error;
+    /// use c32::en::Check;
+    /// use c32::Buffer;
+    ///
+    /// let input = [42, 42, 42];
+    /// let en = Buffer::<14, true, Check>::try_encode(&input, 'S', 0)?;
+    /// assert_eq!(en.as_str(), "S0AHA59B9201Z");
+    /// # Ok::<(), Error>(())
+    /// ```
+    #[inline]
+    pub const fn try_encode<const M: usize>(
+        src: &[u8; M],
+        prefix: char,
+        version: u8,
+    ) -> Result<Self> {
+        const { assert!(N > encoded_check_len(M), "Size 'N' is too small") }
+
+        // Assert that the version is valid (< 32).
+        if version >= 32 {
+            return Err(Error::InvalidVersion {
+                expected: "must be < 32",
+                version,
+            });
+        }
+
+        // Allocate the output buffer.
+        let mut __raw = [0u8; N];
+
+        // Prepend the prefix character.
+        __raw[0] = prefix as u8;
+
+        // Prepend the version character.
+        __raw[1] = ALPHABET[version as usize];
+
+        // Compute the checksum.
+        let sum = checksum::compute(src, version);
+
+        // Encode the input and checksum to the buffer.
+        let __pos = __internal::en(src, 0, M, &mut __raw, 2, Some(sum)) + 2;
+
+        Ok(Self::new(__raw, __pos))
+    }
+
+    /// Decodes a slice of prefixed check-encoded bytes into a [`Buffer`].
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_fmt
+    /// use c32::en::Check;
+    /// use c32::Buffer;
+    ///
+    /// const INPUT: [u8; 13] = *b"S0AHA59B9201Z";
+    /// const RESULT: (Buffer<14, true, Check>, u8) = Buffer::<14, true, Check>::decode(&INPUT, 'S');
+    /// assert_eq!(RESULT.0.as_bytes(), [42, 42, 42]);
+    /// assert_eq!(RESULT.1, 0);
+    /// ```
+    #[inline]
+    #[must_use]
+    pub const fn decode(src: &[u8], prefix: char) -> (Self, u8) {
+        assert!(N >= decoded_check_len(src.len() - 1), "'N' is too small");
+        assert!(prefix.is_ascii(), "Prefix must be an ASCII character");
+        assert!(src.len() >= 3, "Input must contain min. 3 characters");
+        assert!(src[0] == prefix as u8, "Input must start with prefix");
+
+        // Extract the version byte.
+        let mut buffer = [0u8; 1];
+        let _ = match __internal::de(&[src[1]], 0, 1, &mut buffer, 0) {
+            Ok(pos) => pos,
+            Err(Error::InvalidCharacter { char: _, index: _ }) => {
+                panic!("Input must not contain invalid characters")
+            }
+            _ => unreachable!(),
+        };
+
+        // Assert that the version is < 32.
+        let version = buffer[0];
+        assert!(version < 32, "Version must be < 32");
+
+        // Allocate the output buffer.
+        let mut __raw = [0u8; N];
+
+        // Decode the payload.
+        let pos = match __internal::de(src, 2, src.len() - 2, &mut __raw, 0) {
+            Ok(pos) => pos,
+            Err(Error::InvalidCharacter { char: _, index: _ }) => {
+                panic!("Input must not contain invalid characters")
+            }
+            _ => unreachable!(),
+        };
+
+        let __pos = pos - checksum::BYTE_LENGTH;
+
+        // Extract the checksum.
+        let mut sum = [0u8; checksum::BYTE_LENGTH];
+        __internal::memcpy(&mut sum, 0, &__raw, __pos, checksum::BYTE_LENGTH);
+
+        // Compute the expected checksum.
+        let mut expected = [0u8; checksum::BYTE_LENGTH];
+        __internal::memcpy(&mut expected, 0, &__raw, __pos, 4);
+
+        // Assert that the computed and actual checksums match.
+        assert!(__internal::memcmp(&expected, &sum, 4), "Checksum mismatch");
+
+        (Self::new(__raw, __pos), version)
+    }
+
+    /// Decodes a slice of prefixed check-encoded bytes into a [`Buffer`].
+    ///
+    /// # Examples
+    ///
+    ///  ```rust
+    /// # use c32::Error;
+    /// use c32::en::Check;
+    /// use c32::Buffer;
+    ///
+    /// let input = b"S0AHA59B9201Z";
+    /// let (de, version) = Buffer::<14, true, Check>::try_decode(input, 'S')?;
+    /// assert_eq!(de.as_bytes(), [42, 42, 42]);
+    /// assert_eq!(version, 0);
+    /// # Ok::<(), Error>(())
+    /// ```
+    #[inline]
+    pub const fn try_decode(src: &[u8], prefix: char) -> Result<(Self, u8)> {
+        // Assert that the buffer has enough capacity.
+        let capacity = decoded_check_len(src.len() - prefix.len_utf8());
+        if N < capacity {
+            return Err(Error::BufferTooSmall {
+                min: capacity,
+                len: N,
+            });
+        }
+
+        // Assert that the prefix is ASCII.
+        if !prefix.is_ascii() {
+            return Err(Error::InvalidCharacter {
+                char: prefix,
+                index: 0,
+            });
+        }
+
+        // Assert that the input is not empty.
+        if src.is_empty() {
+            return Err(Error::MissingPrefix {
+                char: prefix,
+                got: None,
+            });
+        }
+
+        // Assert that the input has the minimum required length.
+        if src.len() < 3 {
+            return Err(Error::InsufficientData {
+                min: 3,
+                len: src.len(),
+            });
+        }
+
+        // Assert that the string starts with the prefix.
+        if src[0] != prefix as u8 {
+            return Err(Error::MissingPrefix {
+                char: prefix,
+                got: Some(src[0] as char),
+            });
+        }
+
+        // Extract the version byte
+        let mut buffer = [0u8; 1];
+        let _ = match __internal::de(&[src[1]], 0, 1, &mut buffer, 0) {
+            Ok(pos) => pos,
+            Err(err) => return Err(err),
+        };
+
+        // Assert that the version is valid (< 32).
+        let version = buffer[0];
+        if version >= 32 {
+            return Err(Error::InvalidVersion {
+                expected: "must be < 32",
+                version,
+            });
+        }
+
+        // Allocate the output buffer.
+        let mut __raw = [0u8; N];
+
+        // Decode the payload into the buffer.
+        let mut __pos =
+            match __internal::de(src, 2, src.len() - 2, &mut __raw, 0) {
+                Ok(pos) => pos,
+                Err(Error::InvalidCharacter { char, index }) => {
+                    return Err(Error::InvalidCharacter {
+                        char,
+                        index: index + 2,
+                    });
+                }
+                Err(e) => return Err(e),
+            };
+
+        // Extract the checksum.
+        __pos -= checksum::BYTE_LENGTH;
+        let mut sum = [0u8; checksum::BYTE_LENGTH];
+        __internal::memcpy(&mut sum, 0, &__raw, __pos, checksum::BYTE_LENGTH);
+
+        // Compute the expected checksum.
+        let mut expected = [0u8; checksum::BYTE_LENGTH];
+        __internal::memcpy(&mut expected, 0, &__raw, __pos, 4);
+
+        // Assert that the checksums match.
+        if !__internal::memcmp(&expected, &sum, checksum::BYTE_LENGTH) {
+            return Err(Error::ChecksumMismatch { expected, got: sum });
+        }
+
+        Ok((Self::new(__raw, __pos), version))
     }
 }
 
@@ -1127,7 +1582,11 @@ pub fn decode_check(str: &str) -> Result<(Vec<u8>, u8)> {
 /// ```
 #[inline]
 #[cfg(all(feature = "alloc", feature = "check"))]
-pub fn encode_check_prefixed<B>(src: B, prefix: char, version: u8) -> Result<String>
+pub fn encode_check_prefixed<B>(
+    src: B,
+    prefix: char,
+    version: u8,
+) -> Result<String>
 where
     B: AsRef<[u8]>,
 {
@@ -1294,7 +1753,11 @@ pub fn decode_into(src: &[u8], dst: &mut [u8]) -> Result<usize> {
 /// ```
 #[inline]
 #[cfg(feature = "check")]
-pub fn encode_check_into(src: &[u8], dst: &mut [u8], ver: u8) -> Result<usize> {
+pub fn encode_check_into(
+    src: &[u8],
+    dst: &mut [u8],
+    version: u8,
+) -> Result<usize> {
     // Assert that the buffer has enough capacity.
     let capacity = encoded_check_len(src.len());
     if dst.len() < capacity {
@@ -1304,24 +1767,25 @@ pub fn encode_check_into(src: &[u8], dst: &mut [u8], ver: u8) -> Result<usize> {
         });
     }
 
-    // Assert that the version is valid (>= 32).
-    if ver >= 32 {
+    // Assert that the version is valid (< 32).
+    if version >= 32 {
         return Err(Error::InvalidVersion {
-            expected: "must be >= 32",
-            version: ver,
+            expected: "must be < 32",
+            version,
         });
     }
 
     // Insert the version character into the output buffer.
     let mut offset = 0;
-    dst[offset] = ALPHABET[ver as usize];
+    dst[offset] = ALPHABET[version as usize];
     offset += 1;
 
     // Compute the checksum for the input bytes and version.
-    let sum = checksum::compute(src, ver);
+    let sum = checksum::compute(src, version);
 
     // Encode the bytes and checksum.
-    offset += __internal::en(src, 0, src.len(), &mut dst[offset..], 0, Some(sum));
+    offset +=
+        __internal::en(src, 0, src.len(), &mut dst[offset..], 0, Some(sum));
 
     Ok(offset)
 }
@@ -1381,10 +1845,10 @@ pub fn decode_check_into(src: &[u8], dst: &mut [u8]) -> Result<(usize, u8)> {
     let _ = __internal::de(&[*tag], 0, 1, &mut buffer, 0)?;
     let version = buffer[0];
 
-    // Assert that the recovered version is valid. (>= 32).
+    // Assert that the recovered version is valid. (< 32).
     if version >= 32 {
         return Err(Error::InvalidVersion {
-            expected: "must be >= 32",
+            expected: "must be < 32",
             version,
         });
     }
@@ -1403,7 +1867,8 @@ pub fn decode_check_into(src: &[u8], dst: &mut [u8]) -> Result<(usize, u8)> {
 
     // Extract the checksum.
     offset -= checksum::BYTE_LENGTH;
-    let sum = checksum::from_slice(&dst[offset..offset + checksum::BYTE_LENGTH]);
+    let sum =
+        checksum::from_slice(&dst[offset..offset + checksum::BYTE_LENGTH]);
 
     // Compute the expected checksum.
     let expected = checksum::compute(&dst[..offset], version);
@@ -1425,7 +1890,7 @@ mod __internal {
     ///
     /// # Notes
     ///
-    /// The caller must ensure, that the output buffer is sufficiently sized.
+    /// - The output buffer must be properly sized.
     #[inline]
     #[must_use]
     pub(crate) const fn en(
@@ -1532,7 +1997,7 @@ mod __internal {
     ///
     /// # Notes
     ///
-    /// The caller must ensure, that the output buffer is sufficiently sized.
+    /// - The output buffer must be properly sized.
     #[inline]
     #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
     pub(crate) const fn de(
@@ -1551,7 +2016,9 @@ mod __internal {
 
         // count leading zeros
         let mut leading_zeros = 0;
-        while leading_zeros < src_len && src[src_offset + leading_zeros] == ALPHABET[0] {
+        while leading_zeros < src_len
+            && src[src_offset + leading_zeros] == ALPHABET[0]
+        {
             leading_zeros += 1;
         }
 
