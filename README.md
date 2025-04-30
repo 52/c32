@@ -11,7 +11,7 @@ Rust implementation of [Crockford's Base32][Crockford] encoding scheme.
 
 ```toml
 [dependencies]
-c32 = "0.5.3"
+c32 = "0.6.0"
 ```
 
 ## Implementation
