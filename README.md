@@ -58,22 +58,7 @@ let decoded = &buffer[..written];
 assert_eq!(decoded, b"usque ad finem");
 ```
 
-### Using the `Buffer` Type (Const-Friendly)
-
-The library provides a [`Buffer`] type that can be used in const contexts:
-
-```rust
-use c32::Buffer;
-
-const INPUT: [u8; 3] = [42, 42, 42];
-const ENCODED: Buffer<5> = Buffer::encode(&INPUT);
-assert_eq!(ENCODED.as_str(), "2MAHA");
-
-const DECODED: Buffer<5> = Buffer::decode(b"2MAHA");
-assert_eq!(DECODED.as_bytes(), [42, 42, 42]);
-```
-
-### Checksums (`#[feature = "check"]`)
+### Checksum
 
 The `check` feature provides methods for encoding data with SHA256-based checksum verification.
 
