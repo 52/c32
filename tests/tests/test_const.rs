@@ -6,6 +6,7 @@
 //
 // Usage of this file is permitted solely under a sanctioned license.
 
+use c32::en::Check;
 use c32::Buffer;
 
 mod __internal {
@@ -21,9 +22,9 @@ mod __internal {
             #[test]
             fn $name() {
                 const INPUT: [u8; $l] = $i;
-                const ENC: Buffer<$n> = Buffer::encode(&INPUT);
+                const ENC: Buffer<$n> = Buffer::<$n>::encode(&INPUT);
                 assert_eq!(ENC.as_str(), $s);
-                const DEC: Buffer<$m> = Buffer::decode(&ENC.as_bytes());
+                const DEC: Buffer<$m> = Buffer::<$m>::decode(&ENC.as_bytes());
                 assert_eq!(DEC.as_bytes(), INPUT);
             }
         };
@@ -43,10 +44,11 @@ mod __internal {
              fn $name() {
                  const INPUT: [u8; $l] = $i;
                  const VERSION: u8 = $v;
-                 const ENC: Buffer<$n> = Buffer::encode_check(&INPUT, VERSION);
+                 const ENC: Buffer<$n, false, Check> = Buffer::<$n, false, Check>::encode(&INPUT, VERSION);
                  assert_eq!(ENC.as_str(), $s);
-                 const DEC: Buffer<$m> = Buffer::decode_check(&ENC.as_bytes());
-                 assert_eq!(DEC.as_bytes(), INPUT);
+                 const RESULT: (Buffer<$m, false, Check>, u8) = Buffer::<$m, false, Check>::decode(&ENC.as_bytes());
+                 assert_eq!(RESULT.0.as_bytes(), INPUT);
+                 assert_eq!(RESULT.1, VERSION);
              }
          };
      }
@@ -65,9 +67,9 @@ mod __internal {
             fn $name() {
                 const INPUT: [u8; $l] = $i;
                 const PREFIX: char = $p;
-                const ENC: Buffer<$n> = Buffer::encode_prefixed(&INPUT, PREFIX);
+                const ENC: Buffer<$n, true> = Buffer::<$n, true>::encode(&INPUT, PREFIX);
                 assert_eq!(ENC.as_str(), $s);
-                const DEC: Buffer<$m> = Buffer::decode_prefixed(ENC.as_bytes(), PREFIX);
+                const DEC: Buffer<$m, true> = Buffer::<$m, true>::decode(ENC.as_bytes(), PREFIX);
                 assert_eq!(DEC.as_bytes(), INPUT);
             }
         };
@@ -89,10 +91,11 @@ mod __internal {
                 const INPUT: [u8; $l] = $i;
                 const PREFIX: char = $p;
                 const VERSION: u8 = $v;
-                const ENC: Buffer<$n> = Buffer::encode_check_prefixed(&INPUT, PREFIX, VERSION);
+                const ENC: Buffer<$n, true, Check> = Buffer::<$n, true, Check>::encode(&INPUT, PREFIX, VERSION);
                 assert_eq!(ENC.as_str(), $s);
-                const DEC: Buffer<$m> = Buffer::decode_check_prefixed(ENC.as_bytes(), PREFIX);
-                assert_eq!(DEC.as_bytes(), INPUT);
+                const RESULT: (Buffer<$m, true, Check>, u8) = Buffer::<$m, true, Check>::decode(&ENC.as_bytes(), PREFIX);
+                assert_eq!(RESULT.0.as_bytes(), INPUT);
+                assert_eq!(RESULT.1, VERSION);
             }
         };
     }

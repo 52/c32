@@ -14,7 +14,7 @@ rust-version.workspace = true
 repository.workspace = true
 
 [dev-dependencies]
-c32 = { workspace = true }
+c32 = { workspace = true, features = ["alloc", "check"] }
 criterion = { workspace = true }
 
 [[bench]]
@@ -23,13 +23,13 @@ path = "targets/encode.rs"
 harness = false
 
 [[bench]]
-name = "encode_const"
-path = "targets/encode_const.rs"
+name = "decode"
+path = "targets/decode.rs"
 harness = false
 
 [[bench]]
-name = "decode"
-path = "targets/decode.rs"
+name = "encode_const"
+path = "targets/encode_const.rs"
 harness = false
 
 [[bench]]

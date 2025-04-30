@@ -6,6 +6,8 @@
 //
 // Usage of this file is permitted solely under a sanctioned license.
 
+use c32::en::Check;
+use c32::Buffer;
 use criterion::black_box;
 use criterion::criterion_group;
 use criterion::criterion_main;
@@ -21,7 +23,7 @@ fn bench_encode(c: &mut Criterion) {
     macro_rules! bench {
         ($name:expr, $n:expr, $sample:expr) => {
             group.bench_function(f!("encode_const_{}", $name), |b| {
-                b.iter(|| c32::Buffer::<$n>::encode(black_box($sample)));
+                b.iter(|| Buffer::<$n>::encode(black_box($sample)));
             });
         };
     }
@@ -42,7 +44,9 @@ fn bench_encode_check(c: &mut Criterion) {
     macro_rules! bench {
         ($name:expr, $n:expr, $sample:expr) => {
             group.bench_function(f!("encode_check_const_{}", $name), |b| {
-                b.iter(|| c32::Buffer::<$n>::encode_check(black_box($sample), 0));
+                b.iter(|| {
+                    Buffer::<$n, false, Check>::encode(black_box($sample), 0)
+                });
             });
         };
     }
@@ -63,7 +67,7 @@ fn bench_encode_prefixed(c: &mut Criterion) {
     macro_rules! bench {
         ($name:expr, $n:expr, $sample:expr) => {
             group.bench_function(f!("encode_prefixed_const_{}", $name), |b| {
-                b.iter(|| c32::Buffer::<$n>::encode_prefixed(black_box($sample), 'S'));
+                b.iter(|| Buffer::<$n, true>::encode(black_box($sample), 'S'));
             });
         };
     }
@@ -83,9 +87,18 @@ fn bench_encode_check_prefixed(c: &mut Criterion) {
 
     macro_rules! bench {
         ($name:expr, $n:expr, $sample:expr) => {
-            group.bench_function(f!("encode_check_prefixed_const_{}", $name), |b| {
-                b.iter(|| c32::Buffer::<$n>::encode_check_prefixed(black_box($sample), 'S', 0));
-            });
+            group.bench_function(
+                f!("encode_check_prefixed_const_{}", $name),
+                |b| {
+                    b.iter(|| {
+                        Buffer::<$n, true, Check>::encode(
+                            black_box($sample),
+                            'S',
+                            0,
+                        )
+                    });
+                },
+            );
         };
     }
 

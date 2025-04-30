@@ -6,6 +6,8 @@
 //
 // Usage of this file is permitted solely under a sanctioned license.
 
+#![cfg_attr(rustfmt, rustfmt_skip)]
+
 use criterion::black_box;
 use criterion::criterion_group;
 use criterion::criterion_main;

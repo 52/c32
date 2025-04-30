@@ -17,7 +17,7 @@ all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
 
 [features]
-default = ["alloc", "check"]
+default = []
 alloc = []
 check = ["sha2"]
 
