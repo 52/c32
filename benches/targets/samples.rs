@@ -7,6 +7,7 @@
 // Usage of this file is permitted solely under a sanctioned license.
 
 #![allow(dead_code)]
+#![cfg_attr(rustfmt, rustfmt_skip)]
 
 /// A type alias for static byte arrays.
 pub type Bytes<const N: usize> = &'static [u8; N];

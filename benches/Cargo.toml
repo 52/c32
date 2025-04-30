@@ -14,7 +14,7 @@ rust-version.workspace = true
 repository.workspace = true
 
 [dev-dependencies]
-c32 = { workspace = true }
+c32 = { workspace = true, features = ["alloc", "check"] }
 criterion = { workspace = true }
 
 [[bench]]
